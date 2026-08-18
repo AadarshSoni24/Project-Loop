@@ -1,7 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { requireRole } from '@/lib/auth';
+import { requireAuth, requireRole } from '@/lib/auth';
 import { classifyFeedback } from '@/lib/ai/classifier';
+
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const { sessionUser, errorResponse } = await requireAuth();
+  if (errorResponse) return errorResponse;
+
+  try {
+    const feedbackId = params.id;
+    const feedback = await db.feedback.findFirst({
+      where: {
+        id: feedbackId,
+        workspaceId: sessionUser.workspaceId,
+      },
+      include: {
+        themes: {
+          include: {
+            theme: true,
+          },
+        },
+        embedding: true,
+      },
+    });
+
+    if (!feedback) {
+      return NextResponse.json({ error: 'Not Found', message: 'Feedback record not found or access denied.' }, { status: 404 });
+    }
+
+    return NextResponse.json(feedback);
+  } catch (err) {
+    return NextResponse.json({ error: 'Fetch Error', message: (err as Error).message }, { status: 500 });
+  }
+}
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const { sessionUser, errorResponse } = await requireRole(['ADMIN', 'ANALYST']);

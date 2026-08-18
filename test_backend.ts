@@ -19,6 +19,13 @@ async function runBackendTests() {
   const feedbackCount = await db.feedback.count({ where: { workspaceId: workspace.id } });
   console.log(`✅ 3. Feedback Inbox Verified: ${feedbackCount} records in workspace`);
 
+  const singleFeedback = await db.feedback.findFirst({
+    where: { workspaceId: workspace.id },
+    include: { themes: { include: { theme: true } }, embedding: true },
+  });
+  if (!singleFeedback) throw new Error('Test Failed: Could not fetch single feedback record');
+  console.log(`✅ 3b. Single Feedback Record Lookup Verified: "${singleFeedback.id}" (${singleFeedback.themes.length} themes, embedding attached)`);
+
   // 4. Test AI1: Auto-Classification
   console.log('\n--- Testing AI1: Auto-Classification Engine ---');
   const sampleText = "The billing invoice page is timing out whenever we download PDFs.";

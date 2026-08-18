@@ -9,3 +9,4 @@ dist/
 .env.production
 .DS_Store
 coverage/
+*.tsbuildinfo
