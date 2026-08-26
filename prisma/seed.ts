@@ -58,6 +58,15 @@ const FEEDBACK_TEMPLATES = [
 async function main() {
   console.log('🌱 Starting Project LOOP database seed script...');
 
+  // Clean old seed data if present
+  await prisma.embedding.deleteMany();
+  await prisma.feedbackTheme.deleteMany();
+  await prisma.feedback.deleteMany();
+  await prisma.theme.deleteMany();
+  await prisma.report.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.workspace.deleteMany();
+
   const workspace = await prisma.workspace.create({
     data: {
       name: 'Acme Corp',
