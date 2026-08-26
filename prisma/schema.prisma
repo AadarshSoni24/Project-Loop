@@ -1,6 +1,7 @@
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -31,7 +32,7 @@ model User {
 
 model Feedback {
   id             String          @id @default(uuid())
-  content        String
+  content        String          @db.Text
   channel        String          // e.g. "support_ticket", "app_store", "nps_survey", "sales_call", "community_post"
   sourceRef      String?
   customerLabel  String?
@@ -49,7 +50,7 @@ model Feedback {
 model Theme {
   id          String          @id @default(uuid())
   name        String
-  description String?
+  description String?         @db.Text
   color       String          @default("#3b82f6")
   workspaceId String
   workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -71,7 +72,7 @@ model Embedding {
   id         String   @id @default(uuid())
   feedbackId String   @unique
   feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
-  vector     String // JSON string of float array
+  vector     String   @db.Text // JSON string of float array
   createdAt  DateTime @default(now())
 }
 
@@ -80,7 +81,7 @@ model Report {
   title       String
   periodStart DateTime
   periodEnd   DateTime
-  contentJson String // JSON detailed report narrative & stats
+  contentJson String    @db.Text // JSON detailed report narrative & stats
   createdAt   DateTime  @default(now())
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
