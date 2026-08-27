@@ -112,7 +112,7 @@ export default function NewReportPage() {
               className="w-full rounded-lg bg-gray-900 py-3.5 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50 transition shadow-sm"
             >
               {generating
-                ? "⚡ Synthesizing VoC Report with AI..."
+                ? "Synthesizing VoC Report with AI..."
                 : "Generate Executive VoC Report →"}
             </button>
           </div>

@@ -152,21 +152,21 @@ export default function LoginPage() {
                 onClick={() => handleQuickLogin("admin@acme.com")}
                 className="rounded-lg border border-purple-200 bg-purple-50/60 py-1.5 px-2 text-center text-xs font-semibold text-purple-700 hover:bg-purple-100 transition"
               >
-                👑 Admin
+                Admin
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin("analyst@acme.com")}
                 className="rounded-lg border border-blue-200 bg-blue-50/60 py-1.5 px-2 text-center text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
               >
-                🔬 Analyst
+                Analyst
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickLogin("viewer@acme.com")}
                 className="rounded-lg border border-gray-200 bg-gray-50 py-1.5 px-2 text-center text-xs font-semibold text-gray-700 hover:bg-gray-100 transition"
               >
-                👀 Viewer
+                Viewer
               </button>
             </div>
           </div>

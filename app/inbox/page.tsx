@@ -94,13 +94,13 @@ export default function InboxPage() {
               href="/inbox/import"
               className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition shadow-xs"
             >
-              📥 Import CSV
+              Import CSV
             </Link>
             <Link
               href="/inbox/channels"
               className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition shadow-xs"
             >
-              🔌 Channels & Ingest
+              Channels & Ingest
             </Link>
           </div>
 

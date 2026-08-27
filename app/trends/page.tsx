@@ -119,8 +119,8 @@ export default function TrendsPage() {
                   </div>
 
                   {theme.isSpiking && (
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
-                      🔥 Spike
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 uppercase tracking-wide">
+                      Spike
                     </span>
                   )}
                 </div>
@@ -158,8 +158,8 @@ export default function TrendsPage() {
                     {selectedTheme.themeName}
                   </h3>
                   {selectedTheme.isSpiking && (
-                    <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">
-                      🔥 Spike Alert
+                    <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700 uppercase tracking-wide">
+                      Spike Alert
                     </span>
                   )}
                 </div>

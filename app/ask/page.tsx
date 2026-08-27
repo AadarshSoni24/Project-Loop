@@ -94,7 +94,7 @@ export default function AskLoopPage() {
                 disabled={loading}
                 className="rounded-full border border-gray-300 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-700 hover:border-gray-900 hover:bg-gray-50 transition shadow-xs disabled:opacity-40"
               >
-                💬 {prompt}
+                {prompt}
               </button>
             ))}
           </div>
@@ -118,7 +118,7 @@ export default function AskLoopPage() {
                       }`}
                     >
                       <p className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-60">
-                        {isUser ? "You" : "⚡ LOOP Intelligence"}
+                        {isUser ? "You" : "LOOP Intelligence"}
                       </p>
                       <div className="whitespace-pre-wrap font-sans text-[13px]">
                         {m.text}

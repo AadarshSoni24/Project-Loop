@@ -15,13 +15,13 @@ interface ChannelItem {
   lastSync: string;
 }
 
-const CHANNELS: ChannelItem[] = [
+const CHANNELS: (Omit<ChannelItem, 'icon'> & { iconType: string })[] = [
   {
     id: "support_ticket",
     name: "Zendesk & Freshdesk",
     type: "Support Tickets",
     description: "Inbound customer support tickets, escalations, and resolved queries.",
-    icon: "🎫",
+    iconType: "ticket",
     status: "Active",
     lastSync: "Just now",
   },
@@ -30,7 +30,7 @@ const CHANNELS: ChannelItem[] = [
     name: "App Store & Google Play",
     type: "Mobile App Reviews",
     description: "Star ratings, crash feedback, and user reviews from mobile app stores.",
-    icon: "📱",
+    iconType: "mobile",
     status: "Active",
     lastSync: "5 mins ago",
   },
@@ -39,7 +39,7 @@ const CHANNELS: ChannelItem[] = [
     name: "CSAT & NPS Surveys",
     type: "Post-Onboarding Surveys",
     description: "Quarterly NPS campaigns, post-purchase CSAT ratings, and feedback forms.",
-    icon: "📊",
+    iconType: "survey",
     status: "Active",
     lastSync: "12 mins ago",
   },
@@ -48,7 +48,7 @@ const CHANNELS: ChannelItem[] = [
     name: "Gong & CRM Sales Notes",
     type: "Sales Call Transcripts",
     description: "Enterprise feature requests, prospect objections, and competitive intel.",
-    icon: "💼",
+    iconType: "sales",
     status: "Active",
     lastSync: "1 hour ago",
   },
@@ -57,7 +57,7 @@ const CHANNELS: ChannelItem[] = [
     name: "Discord & Slack Community",
     type: "Community Forum",
     description: "User sentiment from developer communities, feature requests, and bugs.",
-    icon: "💬",
+    iconType: "community",
     status: "Active",
     lastSync: "2 hours ago",
   },
@@ -135,7 +135,11 @@ export default function ChannelsPage() {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-2xl">{ch.icon}</span>
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-700">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
                         <div>
                           <h3 className="text-sm font-bold text-gray-900 leading-tight">
                             {ch.name}
@@ -167,7 +171,7 @@ export default function ChannelsPage() {
                       disabled={isSyncing}
                       className="rounded-lg bg-gray-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50 transition shadow-xs"
                     >
-                      {isSyncing ? "Pulling Stream..." : "⚡ Pull Live Feedback"}
+                      {isSyncing ? "Pulling Stream..." : "Pull Live Feedback"}
                     </button>
                   </div>
                 </div>

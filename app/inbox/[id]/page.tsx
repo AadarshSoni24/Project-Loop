@@ -225,7 +225,7 @@ export default function FeedbackDetailPage() {
                       Vector Embeddings
                     </span>
                     <p className="font-semibold text-emerald-700 mt-0.5">
-                      {item.embedding ? "✅ 64-dim Attached" : "None"}
+                      {item.embedding ? "64-dim Attached" : "None"}
                     </p>
                   </div>
                 </div>
@@ -305,7 +305,7 @@ export default function FeedbackDetailPage() {
                     disabled={reclassifying}
                     className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-100 disabled:opacity-50 transition shadow-xs"
                   >
-                    {reclassifying ? "Classifying..." : "⚡ Re-classify Feedback"}
+                    {reclassifying ? "Classifying..." : "Re-classify Feedback"}
                   </button>
                 </div>
               </div>

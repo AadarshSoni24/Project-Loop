@@ -73,7 +73,9 @@ export default function DashboardPage() {
           <div className="mb-8 rounded-xl border border-red-200 bg-red-50/70 p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-700 text-sm font-bold">
-                🔥
+                <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
               </span>
               <div>
                 <p className="text-sm font-semibold text-red-900">
@@ -101,7 +103,11 @@ export default function DashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Total Feedback
               </p>
-              <span className="text-lg">📥</span>
+              <div className="p-2 rounded-lg bg-gray-50 text-gray-700">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
             </div>
             <h3 className="mt-2 text-3xl font-bold text-gray-900">
               {totalCount.toLocaleString()}
@@ -117,7 +123,11 @@ export default function DashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Positive Sentiment
               </p>
-              <span className="text-lg">💚</span>
+              <div className="p-2 rounded-lg bg-green-50 text-green-600">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
             </div>
             <h3 className="mt-2 text-3xl font-bold text-green-600">
               {positivePercent}%
@@ -133,7 +143,11 @@ export default function DashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Negative / Friction
               </p>
-              <span className="text-lg">⚠️</span>
+              <div className="p-2 rounded-lg bg-red-50 text-red-600">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
             </div>
             <h3 className="mt-2 text-3xl font-bold text-red-600">
               {negativePercent}%
@@ -149,7 +163,11 @@ export default function DashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Satisfaction Rating
               </p>
-              <span className="text-lg">⭐</span>
+              <div className="p-2 rounded-lg bg-yellow-50 text-yellow-600">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </div>
             </div>
             <h3 className="mt-2 text-3xl font-bold text-gray-900">
               {avgRating} <span className="text-base text-gray-400 font-normal">/ 5.0</span>
