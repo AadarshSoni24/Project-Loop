@@ -39,6 +39,8 @@ export default function FeedbackDetailPage() {
   }, [id]);
 
   const handleSaveStatus = async () => {
+    const prevStatus = item?.status;
+    setItem((prev: any) => ({ ...prev, status }));
     setUpdating(true);
     setMessage(null);
     try {
@@ -53,9 +55,11 @@ export default function FeedbackDetailPage() {
         setItem((prev: any) => ({ ...prev, status: updated.status }));
         setMessage({ text: "Status updated successfully.", type: "success" });
       } else {
+        if (prevStatus) setItem((prev: any) => ({ ...prev, status: prevStatus }));
         setMessage({ text: "Failed to update status.", type: "error" });
       }
     } catch (err) {
+      if (prevStatus) setItem((prev: any) => ({ ...prev, status: prevStatus }));
       setMessage({ text: "Error saving status.", type: "error" });
     } finally {
       setUpdating(false);

@@ -52,6 +52,16 @@ export default function InboxPage() {
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
+    const prevItem = feedback.find((item) => item.id === id);
+    const previousStatus = prevItem?.status;
+
+    // Optimistic update - immediate visual feedback
+    setFeedback((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, status: newStatus } : item
+      )
+    );
+
     try {
       const res = await fetch(`/api/feedback/${id}`, {
         method: "PATCH",
@@ -59,15 +69,23 @@ export default function InboxPage() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (res.ok) {
+      if (!res.ok && previousStatus) {
+        // Revert on error
         setFeedback((prev) =>
           prev.map((item) =>
-            item.id === id ? { ...item, status: newStatus } : item
+            item.id === id ? { ...item, status: previousStatus } : item
           )
         );
       }
     } catch (err) {
       console.error("Failed to update status:", err);
+      if (previousStatus) {
+        setFeedback((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, status: previousStatus } : item
+          )
+        );
+      }
     }
   };
 
