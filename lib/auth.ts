@@ -14,7 +14,17 @@ export interface SessionUser {
   workspaceId: string;
 }
 
+// Sanitize NEXTAUTH_URL to prevent new URL('') errors during build
+if (process.env.NEXTAUTH_URL === '' || !process.env.NEXTAUTH_URL) {
+  if (process.env.VERCEL_URL) {
+    process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`;
+  } else {
+    delete process.env.NEXTAUTH_URL;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || "project_loop_super_secret_session_key_2026_zidio",
   session: {
     strategy: 'jwt',
   },
