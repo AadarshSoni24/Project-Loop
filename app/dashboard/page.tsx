@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import FeedbackChart from "@/components/FeedbackChart";
 import SentimentChart from "@/components/SentimentChart";
+import ThemeBarChart from "@/components/ThemeBarChart";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
@@ -57,7 +58,7 @@ export default function DashboardPage() {
   const spikingThemes = themes.filter((t) => t.isSpiking);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex">
       <Sidebar />
 
       <main className="ml-64 flex-1 p-8">
@@ -98,7 +99,7 @@ export default function DashboardPage() {
         {/* Top Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {/* Total Feedback */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Total Feedback
@@ -118,7 +119,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Positive Sentiment */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Positive Sentiment
@@ -138,7 +139,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Negative Sentiment */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Negative / Friction
@@ -158,7 +159,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Satisfaction Score */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Satisfaction Rating
@@ -189,6 +190,9 @@ export default function DashboardPage() {
               neutral={neutralPercent}
               negative={negativePercent}
             />
+          </div>
+          <div>
+            <ThemeBarChart />
           </div>
         </div>
 
