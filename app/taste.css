@@ -1,0 +1,35 @@
+/* Taste Design System – Emil Kowalski */
+:root {
+  /* Custom easing curves */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Button base with press feedback */
+.button {
+  transition: transform 160ms var(--ease-out);
+}
+.button:active {
+  transform: scale(0.97);
+}
+
+/* Recharts element transitions */
+.recharts-bar-rectangle {
+  transition: transform 200ms var(--ease-out);
+}
+.recharts-bar-rectangle:active {
+  transform: scale(0.97);
+}
+
+.recharts-tooltip-wrapper {
+  transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+}
+.recharts-tooltip-wrapper[data-instant] {
+  transition-duration: 0ms;
+}
+
+/* Popover/origin helper */
+.popover {
+  transform-origin: var(--transform-origin);
+}

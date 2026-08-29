@@ -22,7 +22,7 @@ export default function Navbar({
   const userName = user?.name || "Acme User";
 
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-white px-6 py-4 border border-gray-200 shadow-sm">
+    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-white/70 backdrop-blur-lg px-6 py-4 border border-gray-200 shadow-sm">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
           {title}
