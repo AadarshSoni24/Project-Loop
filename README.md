@@ -1,231 +1,226 @@
-# Project LOOP � AI Customer-Feedback Intelligence Platform
+﻿# LOOP — AI Customer-Feedback Intelligence Platform
 
-> **"Close the loop on customer feedback."**  
-> A corporate-grade, multi-tenant Voice-of-Customer (VoC) analytics platform built with **Next.js 14 (App Router), TypeScript, PostgreSQL (Supabase), Prisma ORM, NextAuth.js, and Anthropic Claude AI**.
-
----
-
-## ?? Executive Overview
-
-Modern product companies receive hundreds of customer feedback snippets weekly across support tickets, App Store reviews, NPS surveys, sales notes, and community discussions. Individually, each item is a sentence or two; collectively, they reveal what a company should build, fix, or improve next.
-
-**Project LOOP** ingests multi-channel feedback, uses AI to classify and cluster it into trending themes, flags spiking friction points, and provides a retrieval-grounded (RAG) conversational interface to answer plain-English questions backed by real customer evidence.
+> Turns scattered customer feedback into a ranked, evidence-backed list of what to do next.
 
 ---
 
-## ? Quick Start (Get Running in Under 2 Minutes)
+## 2. Screenshots
 
-### 1. Prerequisites
-- **Node.js 18+ LTS** and **npm**
-- A **Supabase PostgreSQL** database (or local PostgreSQL)
-- *(Optional)* Anthropic Claude API key (built-in intelligent local fallback engine provided)
+![Login & Signup Page](./screenshots/login.png)
+*Figure 1: Authentication screen with workspace role-based credentials.*
 
-### 2. Clone & Install Dependencies
-```bash
-git clone https://github.com/AadarshSoni24/Project-Loop.git
-cd Project-Loop
-npm install
-```
+![Main Dashboard with Live Metrics](./screenshots/dashboard.png)
+*Figure 2: Real-time analytics dashboard with volume trends, sentiment breakdown, and spike alerts.*
 
-### 3. Configure Environment Variables
-Create a `.env` file in the root directory (refer to `.env.example`):
-```env
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+![Feedback Inbox with Filters](./screenshots/inbox.png)
+*Figure 3: Multi-channel feedback inbox supporting date range, channel, sentiment, and theme filters.*
 
-NEXTAUTH_SECRET="your-super-secret-session-key-change-in-production"
-NEXTAUTH_URL="http://localhost:3000"
+![Feedback Item Classification Detail](./screenshots/feedback-detail.png)
+*Figure 4: Detailed view showing extracted sentiment score, feature area, assigned themes, and vector embedding.*
 
-# Optional: Uses live Claude 3.5 Sonnet if provided; uses smart local heuristics if omitted
-ANTHROPIC_API_KEY=""
-```
+![Theme Clustering & Trends View](./screenshots/trends.png)
+*Figure 5: Time-series area chart displaying theme volume growth and emerging surge flags.*
 
-### 4. Initialize Database & Seed Demo Data
-```bash
-# Push Prisma schema to Supabase PostgreSQL
-npx prisma db push
+![Ask LOOP Grounded Q&A Interface](./screenshots/ask-loop.png)
+*Figure 6: Retrieval-Augmented Generation (RAG) assistant answering questions with cited feedback evidence.*
 
-# Seed 125 realistic feedback items, 7 themes, and 3 role accounts
-npm run db:seed
-```
-
-### 5. Run Local Development Server
-```bash
-npm run dev
-# App will run at http://localhost:3000
-```
-
-### 6. Run Automated Backend Test Suite
-```bash
-npx tsx test_backend.ts
-```
+![Voice-of-Customer Executive Report View](./screenshots/voc-report.png)
+*Figure 7: Generated Voice-of-Customer executive digest with key statistics, verbatim quotes, and action recommendations.*
 
 ---
 
-## ?? Demo Login Credentials (For Evaluators & Mentors)
+## 3. Tech Stack
 
-The database seed script automatically provisions three role-based accounts within the **Acme Corp** workspace for testing RBAC:
-
-| Role | Email | Password | Permissions |
-| :--- | :--- | :--- | :--- |
-| **ADMIN** | `admin@acme.com` | `admin123` | Full access: ingest feedback, trigger reports, manage themes, delete records |
-| **ANALYST** | `analyst@acme.com` | `admin123` | Feedback ingestion, bulk CSV import, theme tagging, Ask LOOP, VoC report generation |
-| **VIEWER** | `viewer@acme.com` | `admin123` | Read-only access: view inbox, analytics dashboards, search, and generated reports |
-
----
-
-## ??? System Architecture & Data Flow
-
-```text
- +-------------------------------------------------------------+
- �               Next.js 14 Client / Dashboard                 �
- +-------------------------------------------------------------+
-                                � (HTTPS / JSON)
-                                ?
- +-------------------------------------------------------------+
- �       Next.js App Router API Handlers (REST Layer)          �
- �  � Session Validation (NextAuth.js JWT)                     �
- �  � Role-Based Access Control (RBAC Guard: Admin/Analyst/View)�
- �  � Strict Tenant Scoping (WHERE workspaceId = user.workspace)�
- +-------------------------------------------------------------+
-                �                              �
-                ?                              ?
- +-----------------------------+ +-----------------------------+
- � PostgreSQL / Supabase DB    � � Anthropic Claude AI Engine  �
- �  � Workspace & Users (RBAC) � �  � Claude 3.5 Sonnet SDK    �
- �  � Feedback (Multi-channel) � �  � Structured JSON Parsing  �
- �  � Themes & Join Relations  � �  � Grounded RAG Generation  �
- �  � Vector Embeddings        � �  � VoC Executive Synthesis  �
- +-----------------------------+ +-----------------------------+
-```
-
-### Non-Negotiable Security Rules:
-1. **Tenant Isolation**: Every database query touching feedback, themes, reports, or users is strictly filtered by `workspaceId`. A user from Company A can never read or mutate records from Company B.
-2. **Server-Side AI & Secrets**: Anthropic API keys and database credentials remain strictly on the server�never exposed to the client browser.
-
----
-
-## ?? AI Intelligence Features (Modules AI1 � AI4)
-
-### 1. AI1: Structured Auto-Classification (`lib/ai/classifier.ts`)
-- Evaluates raw feedback upon ingestion and returns structured JSON.
-- Extracts:
-  - **Sentiment**: `POS` (Positive), `NEU` (Neutral), `NEG` (Negative)
-  - **Sentiment Score**: Float between `-1.0` and `+1.0`
-  - **Feature Area**: Categorization (e.g., *Billing & Payments*, *Team Onboarding*, *Security & SSO*, *Performance*, *Mobile App*)
-  - **Themes**: Standardized taxonomy tags
-  - **Rationale**: One-line reasoning explaining the categorization
-
-### 2. AI2: Theme Clustering & Trend Spike Detection (`lib/ai/clustering.ts`)
-- Aggregates feedback volume across customizable timeframes (e.g., 7 or 30 days).
-- Computes period-over-period growth percentages:
-  $$\Delta\% = \frac{\text{Current Period} - \text{Previous Period}}{\text{Previous Period}} \times 100$$
-- Automatically flags emerging customer friction points (`isSpiking: true`) when growth exceeds critical thresholds.
-
-### 3. AI3: Ask LOOP � Retrieval-Augmented Generation (RAG) (`lib/ai/rag.ts`)
-- **Semantic Retrieval**: Converts incoming queries and feedback items into 64-dimensional vector embeddings and performs cosine similarity matching.
-- **Evidence Grounding**: Feeds top-$K$ matching customer quotes to Claude with strict system prompts: *"Answer solely using the provided feedback excerpts; cite specific customer items and do not hallucinate facts."*
-
-### 4. AI4: Voice-of-Customer (VoC) Executive Digest (`lib/ai/reports.ts`)
-- Pre-computes key statistics in code (total volume, sentiment breakdown, positive/negative ratios, theme distribution).
-- Directs Claude to synthesize an executive-ready narrative detailing key friction themes, customer quotes, and actionable product recommendations.
-
----
-
-## ??? Database Data Model (`prisma/schema.prisma`)
-
-```text
- +---------------+
- �   Workspace   �?--------+
- +---------------+         � (workspaceId)
-         � 1:N             �
-         +-----------------+------------------+
-         ?                 ?                  ?
-  +-------------+   +-------------+    +-------------+
-  �    User     �   �  Feedback   �    �    Theme    �
-  +-------------+   +-------------+    +-------------+
-                           � 1:N              � 1:N
-                           ?                  ?
-                    +--------------------------------+
-                    � FeedbackTheme (Join Table)     �
-                    �   � feedbackId, themeId        �
-                    �   � confidence (0..1)          �
-                    +--------------------------------+
-```
-
-- **`Workspace`**: Tenant boundary (`id`, `name`, `createdAt`).
-- **`User`**: Account identity (`id`, `name`, `email`, `passwordHash`, `role`, `workspaceId`).
-- **`Feedback`**: Customer voice record (`id`, `content`, `channel`, `sourceRef`, `customerLabel`, `sentiment`, `sentimentScore`, `featureArea`, `status`, `workspaceId`).
-- **`Theme`**: Tag category (`id`, `name`, `description`, `color`, `workspaceId`).
-- **`FeedbackTheme`**: Composite join table (`feedbackId`, `themeId`, `confidence`).
-- **`Embedding`**: Vector representation (`id`, `feedbackId`, `vector`).
-- **`Report`**: Generated VoC digest (`id`, `title`, `periodStart`, `periodEnd`, `contentJson`, `workspaceId`, `generatedBy`).
-
----
-
-## ?? REST API Reference
-
-| Endpoint | Method | Allowed Roles | Description |
-| :--- | :--- | :--- | :--- |
-| `/api/auth/[...nextauth]` | `POST/GET` | Public | NextAuth credentials authentication & session management |
-| `/api/feedback` | `GET` | Authenticated | Fetch paginated, filtered feedback list (by channel, sentiment, status, theme, search, date) |
-| `/api/feedback` | `POST` | ADMIN, ANALYST | Create new feedback with automated AI classification and vector embedding |
-| `/api/feedback/bulk` | `POST` | ADMIN, ANALYST | Bulk ingest feedback from JSON arrays or CSV uploads |
-| `/api/feedback/simulate` | `POST` | ADMIN, ANALYST | Ingest simulated streaming feedback from support tickets, app reviews, and sales notes |
-| `/api/feedback/[id]` | `GET` | Authenticated | Fetch single feedback item with linked themes and embedding metadata |
-| `/api/feedback/[id]` | `PATCH` | ADMIN, ANALYST | Update feedback status (`NEW` ? `REVIEWED` ? `ACTIONED`) or trigger re-classification |
-| `/api/feedback/[id]` | `DELETE` | ADMIN, ANALYST | Delete a feedback entry |
-| `/api/insights/ask` | `POST` | Authenticated | Ask LOOP natural language questions grounded in customer feedback |
-| `/api/themes` | `GET` | Authenticated | Retrieve workspace themes with trend growth metrics and spike flags |
-| `/api/themes` | `POST` | ADMIN, ANALYST | Create a new custom workspace theme |
-| `/api/reports` | `GET` | Authenticated | List all generated VoC executive digests |
-| `/api/reports` | `POST` | ADMIN, ANALYST | Generate a new Voice-of-Customer executive digest report |
-
----
-
-## ??? Technology Stack
-
-| Layer | Technology | Purpose |
+| Layer | Technology | Description |
 | :--- | :--- | :--- |
-| **Framework** | Next.js 14.2 (App Router) + TypeScript | Full-stack serverless architecture & typed API endpoints |
-| **Database** | PostgreSQL (Supabase) | Relational integrity and multi-tenant data storage |
-| **ORM** | Prisma ORM 5.22 | Type-safe schema definitions, relationships, and queries |
-| **Authentication** | NextAuth.js (Auth.js) + bcryptjs | Secure JWT session management and RBAC guards |
-| **AI Intelligence** | Anthropic Claude 3.5 Sonnet (`@anthropic-ai/sdk`) | Structured classification, grounded RAG Q&A, and report generation |
-| **Data Validation** | Zod 3.23 | Strict schema validation across all API boundaries |
-| **Visualizations** | Recharts | Trend graphs, sentiment breakdowns, and volume charts |
-| **Styling** | Tailwind CSS + clsx | Modern responsive design system |
+| **Web Framework** | [Next.js 14.2](https://nextjs.org/) (App Router) | React Server Components, client pages, and serverless API route handlers |
+| **Language** | [TypeScript 5.6](https://www.typescriptlang.org/) | End-to-end type safety across the database, AI handlers, and UI |
+| **Styling** | [Tailwind CSS 3.4](https://tailwindcss.com/) + [clsx](https://github.com/lukeed/clsx) + [tailwind-merge](https://github.com/dcastil/tailwind-merge) | Responsive design system with custom utility styling |
+| **Database** | [PostgreSQL (Supabase)](https://supabase.com/) | Relational database engine with pooled and direct connection strings |
+| **ORM** | [Prisma ORM 5.22](https://www.prisma.io/) | Schema definition, relational joins, and database queries |
+| **Authentication** | [NextAuth.js 4.24](https://next-auth.js.org/) + [bcryptjs](https://github.com/dcodeIO/bcrypt.js) | JWT session management, route protection middleware, and RBAC |
+| **AI Engine** | [Anthropic Claude 3.5 Sonnet](https://www.anthropic.com/) (`@anthropic-ai/sdk`) | Structured classification, executive report synthesis, and grounded Q&A |
+| **Vector Search / Embeddings** | 64-Dimensional Vector Hashes (`lib/ai/rag.ts`) | Cosine similarity matching for semantic feedback retrieval |
+| **Charts & Visualizations** | [Recharts 2.13](https://recharts.org/) | Interactive area charts, daily volume bars, and sentiment pie graphs |
+| **Validation** | [Zod 3.23](https://zod.dev/) | Strict runtime request and response payload schema validation |
+| **Deployment Target** | [Vercel](https://vercel.com/) | Cloud platform for serverless Next.js deployments |
 
 ---
 
-## ?? Testing & Verification
+## 4. Features
 
-The project includes an automated end-to-end backend integration test suite verifying workspace isolation, RBAC permissions, and all 4 AI modules:
+### Core Platform Features
+- **Multi-Tenant Workspaces & RBAC**: Strict tenant isolation across all database operations with role-based access control (`ADMIN`, `ANALYST`, and `VIEWER`) enforced via API route guards and Next.js middleware.
+- **Multi-Channel Feedback Ingestion**: Captures customer feedback through direct manual submission, bulk CSV uploads with client validation, and simulated streaming channels (Support Tickets, App Store, NPS Surveys, Sales Calls, Community Posts).
+- **Feedback Inbox & Management**: Comprehensive search, pagination, multi-attribute filtering (date range, sentiment, channel, status, theme), and real-time status workflows (`NEW` → `REVIEWED` → `ACTIONED`).
+- **Analytics & Health Dashboard**: Live metric counters, positive/neutral/negative sentiment ratios, 5-star customer satisfaction index, and weekly activity timelines.
 
-```bash
-npx tsx test_backend.ts
+### AI Intelligence Features
+- **AI1: Structured Auto-Classification (`lib/ai/classifier.ts`)**: Evaluates incoming customer text in real-time using Claude 3.5 Sonnet to output structured JSON with sentiment polarity (`POS`, `NEU`, `NEG`), a score between `-1.0` and `+1.0`, primary feature area, and taxonomy themes.
+- **AI2: Theme Clustering & Trend Spikes (`lib/ai/clustering.ts`)**: Aggregates feedback volume across 7, 30, and 90-day intervals, calculates period-over-period percentage growth, and triggers spike alert badges when sudden customer friction emerges.
+- **AI3: Ask LOOP Grounded Q&A (`lib/ai/rag.ts`)**: Conversational search engine that converts natural language questions into vector embeddings, retrieves the top-$K$ most relevant feedback records, and prompts Claude to generate answers strictly citing matching customer evidence.
+- **AI4: Voice-of-Customer Executive Reports (`lib/ai/reports.ts`)**: Pre-computes workspace volume, sentiment ratios, and surging themes in code, then directs Claude to synthesize an executive summary with verbatim quotes and prioritized product recommendations.
+
+---
+
+## 5. Architecture Overview
+
+Project LOOP follows a secure three-tier serverless architecture. The client browser communicates with Next.js App Router API route handlers, which validate authentication sessions, enforce RBAC permissions, and apply multi-tenant scoping before querying PostgreSQL via Prisma ORM. All AI integrations (Anthropic Claude SDK and vector computations) execute strictly on the server side to protect API credentials.
+
+```
+ +-------------------------------------------------------------+
+ |                     Browser / Next.js Client                 |
+ |        Dashboard | Inbox | Trends | Reports | Ask LOOP       |
+ +-------------------------------------------------------------+
+                               |
+                        HTTPS (REST API)
+                               v
+ +-------------------------------------------------------------+
+ |                   Next.js API Route Handlers                |
+ |    - Route Protection Middleware (next-auth/jwt)            |
+ |    - RBAC Authorization Guard (ADMIN, ANALYST, VIEWER)       |
+ |    - Strict Tenant Scoping (WHERE workspaceId = user.wsId)  |
+ +-------------------------------------------------------------+
+                /                              \
+               /                                \
+              v                                  v
+ +-----------------------------+  +-----------------------------+
+ |    PostgreSQL (Supabase)    |  |    Anthropic Claude 3.5     |
+ |   - Workspaces & Users      |  |   - Structured Classifier   |
+ |   - Feedback & Themes       |  |   - Grounded RAG Synthesis  |
+ |   - Join Relations & Vectors|  |   - Executive VoC Digests   |
+ +-----------------------------+  +-----------------------------+
 ```
 
-**Expected Test Output:**
+### Multi-Tenant Isolation Rule
+Every database query touching feedback, themes, reports, or embeddings strictly includes `workspaceId: sessionUser.workspaceId`. Users from one organization cannot view, search, modify, or delete records belonging to another organization.
+
+---
+
+## 6. Local Setup Instructions
+
+### Prerequisites
+- **Node.js**: `v18.17.0` or higher (`v20.x` recommended)
+- **npm**: `v9.x` or higher
+- **PostgreSQL Database**: Accessible instance (e.g. [Supabase](https://supabase.com/) or local PostgreSQL)
+- **Anthropic API Key**: For Claude 3.5 Sonnet processing (an intelligent fallback is included for offline testing)
+
+### Step-by-Step Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/AadarshSoni24/Project-Loop.git
+   cd Project-Loop
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables:**
+   Copy the example configuration file:
+   ```bash
+   cp .env.example .env
+   ```
+   Fill in the required variables in `.env`:
+   - `DATABASE_URL`: Connection pooled PostgreSQL connection string (Supabase transaction pooler on port 6543 or standard 5432).
+   - `DIRECT_URL`: Direct PostgreSQL connection string for Prisma migrations.
+   - `NEXTAUTH_SECRET`: A secure random 32-byte secret string for signing session JWT tokens.
+   - `NEXTAUTH_URL`: Base URL of the application (e.g., `http://localhost:3000`).
+   - `ANTHROPIC_API_KEY`: Your Anthropic API key (`sk-ant-...`).
+
+4. **Initialize and seed the database:**
+   Push the Prisma schema to your PostgreSQL database and run the seed script:
+   ```bash
+   npm run db:push
+   npm run db:seed
+   ```
+   *The seed script creates the demo workspace ("Acme Corp"), 3 RBAC users, 7 core themes, and 125 multi-channel feedback records with embeddings.*
+
+5. **Start the local development server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+6. **Build for production / deployment:**
+   ```bash
+   npm run build
+   npm run start
+   ```
+
+---
+
+## 7. Demo Credentials
+
+The database seed creates three pre-configured accounts under the **Acme Corp** workspace:
+
+| Role | Email | Password | Access Permissions |
+| :--- | :--- | :--- | :--- |
+| **ADMIN** | `admin@acme.com` | `admin123` | Full access: Ingest feedback, update status, generate reports, create themes |
+| **ANALYST** | `analyst@acme.com` | `admin123` | Operational access: Ingest feedback, update status, generate reports |
+| **VIEWER** | `viewer@acme.com` | `admin123` | Read-only access: View dashboard, search inbox, inspect trends, ask questions |
+
+---
+
+## 8. Project Structure
+
 ```text
-?? Starting Project LOOP Backend Automated Integration Tests...
-
-? 1. Multi-Tenant Workspace Verified: "Acme Corp"
-? 2. RBAC Users Verified: 3 users present (ADMIN, ANALYST, VIEWER)
-? 3. Feedback Inbox Verified: 125 records in workspace
-? 3b. Single Feedback Record Lookup Verified
-
---- Testing AI1: Auto-Classification Engine --- Passed
---- Testing AI2: Theme Clustering & Spike Trend Detection --- Passed
---- Testing AI3: Ask LOOP Grounded RAG Q&A --- Passed
---- Testing AI4: Voice-of-Customer Digest Report Generator --- Passed
-
-?? ALL BACKEND INTEGRATION TESTS PASSED 100% CLEANLY!
+Project Loop/
+├── app/                        # Next.js 14 App Router pages and API routes
+│   ├── (auth)/login/           # User authentication login page
+│   ├── (auth)/signup/          # User registration signup page
+│   ├── 403/                    # Forbidden access error page
+│   ├── analytics/              # Deep-dive analytics charts and breakdown view
+│   ├── api/                    # Serverless REST API route handlers
+│   │   ├── analytics/          # Filterable workspace metric calculations
+│   │   ├── auth/[...nextauth]/ # NextAuth authentication endpoints
+│   │   ├── feedback/           # Feedback CRUD, bulk upload, simulation, and items
+│   │   ├── insights/ask/       # Ask LOOP RAG natural language Q&A handler
+│   │   ├── reports/            # VoC executive digest generation and history
+│   │   └── themes/             # Theme clustering and spike detection endpoint
+│   ├── ask/                    # Ask LOOP conversational RAG search page
+│   ├── dashboard/              # Executive VoC metrics and live intelligence feed
+│   ├── inbox/                  # Multi-channel feedback inbox, single creation, and CSV import
+│   ├── reports/                # VoC digest list and printable detail reports
+│   ├── trends/                 # Time-series theme volume and surge detection page
+│   ├── globals.css             # Tailwind design system stylesheet
+│   └── layout.tsx              # Root HTML wrapper and NextAuth session provider
+├── components/                 # Reusable UI component library
+│   ├── FeedbackChart.tsx       # Weekly volume line/bar chart component
+│   ├── Navbar.tsx              # Application top navigation bar
+│   ├── SentimentChart.tsx      # Sentiment distribution doughnut chart
+│   ├── Sidebar.tsx             # Workspace navigation sidebar
+│   └── ThemeBarChart.tsx       # Theme distribution bar chart
+├── lib/                        # Core business logic, database, and AI modules
+│   ├── ai/                     # AI intelligence engines
+│   │   ├── classifier.ts       # Structured sentiment, feature, and theme classification
+│   │   ├── clustering.ts       # Volume aggregation and surge detection algorithms
+│   │   ├── rag.ts              # 64-dim vector retrieval and evidence-grounded Q&A
+│   │   └── reports.ts          # VoC digest narrative synthesis
+│   ├── auth.ts                 # NextAuth configuration and RBAC route helper guards
+│   └── db.ts                   # Global Prisma Client database singleton
+├── middleware.ts               # Next.js Edge route protection and session verification
+├── prisma/                     # Database schema definitions and seed data
+│   ├── schema.prisma           # Prisma data model with enums and relations
+│   └── seed.ts                 # Workspace, users, themes, and 125 feedback seed script
+├── public/                     # Static media, icons, and asset files
+├── test_backend.ts             # Automated integration test suite for backend and AI modules
+├── package.json                # Project dependencies and script declarations
+├── tailwind.config.ts          # Tailwind CSS theme configuration
+└── tsconfig.json               # TypeScript compiler configuration
 ```
 
 ---
 
-## ?? License & Academic Integrity
+## 9. Team
 
-Built as part of the **Zidio Development Web Development Internship Program** (Corporate Track).  
-All architecture, schema designs, and AI implementations are original and compliant with the Project LOOP Specification & Rubric.
+- **Aadarsh Soni** — *Full-Stack Architecture, AI Engine Integrations, Database Design & UI Engineering*
+- `[Team Member Name]` — `[Module / Area Owned]` *(Optional placeholder for additional contributors)*
+
+---
+
+## 10. License / Acknowledgment
+
+Built as part of the **Zidio Development Web Development Internship Program**, **Project LOOP Specification Brief v1.0**.
