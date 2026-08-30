@@ -7,8 +7,31 @@ export async function GET(req: NextRequest) {
   if (errorResponse) return errorResponse;
 
   try {
+    const url = new URL(req.url);
+    const channel = url.searchParams.get("channel");
+    const sentiment = url.searchParams.get("sentiment");
+    const status = url.searchParams.get("status");
+    const startDate = url.searchParams.get("startDate");
+    const endDate = url.searchParams.get("endDate");
+
+    // Build dynamic filter
+    const where: Record<string, unknown> = {
+      workspaceId: sessionUser.workspaceId,
+    };
+
+    if (channel) where.channel = channel;
+    if (sentiment) where.sentiment = sentiment;
+    if (status) where.status = status;
+
+    if (startDate || endDate) {
+      const createdAtFilter: Record<string, Date> = {};
+      if (startDate) createdAtFilter.gte = new Date(startDate);
+      if (endDate) createdAtFilter.lte = new Date(endDate);
+      where.createdAt = createdAtFilter;
+    }
+
     const feedbackItems = await db.feedback.findMany({
-      where: { workspaceId: sessionUser.workspaceId },
+      where,
       orderBy: { createdAt: "asc" },
       include: {
         themes: {

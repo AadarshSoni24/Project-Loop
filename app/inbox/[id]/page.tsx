@@ -6,12 +6,35 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 
+interface DetailThemeItem {
+  theme: {
+    id: string;
+    name: string;
+    color?: string;
+  };
+}
+
+interface FeedbackItemDetail {
+  id: string;
+  content: string;
+  channel: string;
+  sentiment: string;
+  sentimentScore: number;
+  featureArea?: string;
+  status: string;
+  createdAt: string;
+  customerLabel?: string;
+  sourceRef?: string;
+  embedding?: { id: string };
+  themes?: DetailThemeItem[];
+}
+
 export default function FeedbackDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
-  const [item, setItem] = useState<any>(null);
+  const [item, setItem] = useState<FeedbackItemDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("NEW");
   const [updating, setUpdating] = useState(false);
@@ -40,7 +63,7 @@ export default function FeedbackDetailPage() {
 
   const handleSaveStatus = async () => {
     const prevStatus = item?.status;
-    setItem((prev: any) => ({ ...prev, status }));
+    setItem((prev) => (prev ? { ...prev, status } : null));
     setUpdating(true);
     setMessage(null);
     try {
@@ -52,14 +75,14 @@ export default function FeedbackDetailPage() {
 
       if (res.ok) {
         const updated = await res.json();
-        setItem((prev: any) => ({ ...prev, status: updated.status }));
+        setItem((prev) => (prev ? { ...prev, status: updated.status } : null));
         setMessage({ text: "Status updated successfully.", type: "success" });
       } else {
-        if (prevStatus) setItem((prev: any) => ({ ...prev, status: prevStatus }));
+        if (prevStatus) setItem((prev) => (prev ? { ...prev, status: prevStatus } : null));
         setMessage({ text: "Failed to update status.", type: "error" });
       }
     } catch (err) {
-      if (prevStatus) setItem((prev: any) => ({ ...prev, status: prevStatus }));
+      if (prevStatus) setItem((prev) => (prev ? { ...prev, status: prevStatus } : null));
       setMessage({ text: "Error saving status.", type: "error" });
     } finally {
       setUpdating(false);
@@ -78,12 +101,16 @@ export default function FeedbackDetailPage() {
 
       if (res.ok) {
         const result = await res.json();
-        setItem((prev: any) => ({
-          ...prev,
-          sentiment: result.data.sentiment,
-          sentimentScore: result.data.sentimentScore,
-          featureArea: result.data.featureArea,
-        }));
+        setItem((prev) =>
+          prev
+            ? {
+                ...prev,
+                sentiment: result.data.sentiment,
+                sentimentScore: result.data.sentimentScore,
+                featureArea: result.data.featureArea,
+              }
+            : null
+        );
         setMessage({
           text: `Re-classification complete! Detected: ${result.data.sentiment} (${result.data.sentimentScore}) • Feature: ${result.data.featureArea}`,
           type: "success",
@@ -241,7 +268,7 @@ export default function FeedbackDetailPage() {
                       Clustered Themes
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {item.themes.map((ft: any) => (
+                      {item.themes.map((ft: DetailThemeItem) => (
                         <span
                           key={ft.theme.id}
                           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200"

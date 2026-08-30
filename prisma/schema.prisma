@@ -8,6 +8,24 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum Role {
+  ADMIN
+  ANALYST
+  VIEWER
+}
+
+enum Sentiment {
+  POS
+  NEU
+  NEG
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWED
+  ACTIONED
+}
+
 model Workspace {
   id        String     @id @default(uuid())
   name      String
@@ -23,7 +41,7 @@ model User {
   name         String
   email        String    @unique
   passwordHash String
-  role         String    @default("VIEWER") // "ADMIN" | "ANALYST" | "VIEWER"
+  role         Role      @default(VIEWER)
   workspaceId  String
   workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdAt    DateTime  @default(now())
@@ -36,10 +54,10 @@ model Feedback {
   channel        String          // e.g. "support_ticket", "app_store", "nps_survey", "sales_call", "community_post"
   sourceRef      String?
   customerLabel  String?
-  sentiment      String          @default("NEU") // "POS" | "NEU" | "NEG"
+  sentiment      Sentiment       @default(NEU)
   sentimentScore Float           @default(0.0)   // -1.0 to 1.0
   featureArea    String?
-  status         String          @default("NEW") // "NEW" | "REVIEWED" | "ACTIONED"
+  status         FeedbackStatus  @default(NEW)
   createdAt      DateTime        @default(now())
   workspaceId    String
   workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

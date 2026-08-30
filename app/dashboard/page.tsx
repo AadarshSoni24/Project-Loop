@@ -9,11 +9,53 @@ import ThemeBarChart from "@/components/ThemeBarChart";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+interface SentimentData {
+  positiveCount: number;
+  neutralCount: number;
+  negativeCount: number;
+  positivePercent: number;
+  neutralPercent: number;
+  negativePercent: number;
+}
+
+interface DailyTrendItem {
+  day: string;
+  feedback: number;
+}
+
+interface AnalyticsData {
+  totalCount: number;
+  sentiment: SentimentData;
+  avgRating: number;
+  dailyTrend: DailyTrendItem[];
+  themeBreakdown: { theme: string; feedback: number }[];
+}
+
+interface FeedbackThemeItem {
+  theme: { id: string; name: string };
+}
+
+interface RecentFeedbackItem {
+  id: string;
+  content: string;
+  channel: string;
+  sentiment: string;
+  createdAt: string;
+  themes?: FeedbackThemeItem[];
+}
+
+interface ThemeTrendItem {
+  themeId: string;
+  themeName: string;
+  changePercentage: number;
+  isSpiking: boolean;
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [stats, setStats] = useState<any>(null);
-  const [recentFeedback, setRecentFeedback] = useState<any[]>([]);
-  const [themes, setThemes] = useState<any[]>([]);
+  const [stats, setStats] = useState<AnalyticsData | null>(null);
+  const [recentFeedback, setRecentFeedback] = useState<RecentFeedbackItem[]>([]);
+  const [themes, setThemes] = useState<ThemeTrendItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +68,7 @@ export default function DashboardPage() {
         ]);
 
         if (analyticsRes.ok) {
-          const aData = await analyticsRes.json();
+          const aData: AnalyticsData = await analyticsRes.json();
           setStats(aData);
         }
 

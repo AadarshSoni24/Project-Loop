@@ -5,16 +5,72 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 
+interface FeedbackThemeItem {
+  theme: { id: string; name: string };
+}
+
+interface FeedbackItem {
+  id: string;
+  content: string;
+  channel: string;
+  sentiment: string;
+  sentimentScore: number;
+  status: string;
+  createdAt: string;
+  themes?: FeedbackThemeItem[];
+}
+
+interface ThemeOption {
+  themeId: string;
+  themeName: string;
+}
+
 export default function InboxPage() {
-  const [feedback, setFeedback] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sentiment, setSentiment] = useState("");
   const [channel, setChannel] = useState("");
   const [status, setStatus] = useState("");
+  const [themeId, setThemeId] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [themeOptions, setThemeOptions] = useState<ThemeOption[]>([]);
+
+  // Load theme options for the filter dropdown
+  useEffect(() => {
+    async function loadThemes() {
+      try {
+        const res = await fetch("/api/themes?days=365");
+        if (res.ok) {
+          const data = await res.json();
+          setThemeOptions(
+            (data.data || []).map((t: { themeId: string; themeName: string }) => ({
+              themeId: t.themeId,
+              themeName: t.themeName,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load theme options:", err);
+      }
+    }
+    loadThemes();
+  }, []);
+
+  // Read themeId from URL search params on initial load (for drill-down from Trends)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlThemeId = urlParams.get("themeId");
+      if (urlThemeId) {
+        setThemeId(urlThemeId);
+      }
+    }
+  }, []);
 
   const fetchFeedback = async () => {
     setLoading(true);
@@ -26,6 +82,9 @@ export default function InboxPage() {
       if (sentiment) params.set("sentiment", sentiment);
       if (channel) params.set("channel", channel);
       if (status) params.set("status", status);
+      if (themeId) params.set("themeId", themeId);
+      if (startDate) params.set("startDate", startDate);
+      if (endDate) params.set("endDate", endDate);
 
       const res = await fetch(`/api/feedback?${params.toString()}`);
       if (res.ok) {
@@ -43,7 +102,8 @@ export default function InboxPage() {
 
   useEffect(() => {
     fetchFeedback();
-  }, [page, sentiment, channel, status]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, sentiment, channel, status, themeId, startDate, endDate]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +149,19 @@ export default function InboxPage() {
     }
   };
 
+  const clearFilters = () => {
+    setSentiment("");
+    setChannel("");
+    setStatus("");
+    setThemeId("");
+    setStartDate("");
+    setEndDate("");
+    setSearch("");
+    setPage(1);
+  };
+
+  const hasActiveFilters = sentiment || channel || status || themeId || startDate || endDate || search;
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
@@ -118,18 +191,28 @@ export default function InboxPage() {
               href="/inbox/channels"
               className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition shadow-xs"
             >
-              Channels & Ingest
+              Channels &amp; Ingest
             </Link>
           </div>
 
-          <p className="text-xs text-gray-500">
-            Showing <span className="font-semibold text-gray-900">{feedback.length}</span> of{" "}
-            <span className="font-semibold text-gray-900">{totalCount}</span> records
-          </p>
+          <div className="flex items-center gap-3">
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="text-xs font-semibold text-red-600 hover:text-red-800 transition"
+              >
+                Clear All Filters
+              </button>
+            )}
+            <p className="text-xs text-gray-500">
+              Showing <span className="font-semibold text-gray-900">{feedback.length}</span> of{" "}
+              <span className="font-semibold text-gray-900">{totalCount}</span> records
+            </p>
+          </div>
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           <form onSubmit={handleSearchSubmit} className="lg:col-span-2 flex gap-2">
             <input
               type="text"
@@ -193,6 +276,55 @@ export default function InboxPage() {
             <option value="REVIEWED">REVIEWED</option>
             <option value="ACTIONED">ACTIONED</option>
           </select>
+
+          {/* Theme Filter */}
+          <select
+            value={themeId}
+            onChange={(e) => {
+              setThemeId(e.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 outline-none focus:border-gray-900"
+          >
+            <option value="">All Themes</option>
+            {themeOptions.map((t) => (
+              <option key={t.themeId} value={t.themeId}>
+                {t.themeName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Date Range Filters */}
+        <div className="mb-6 flex flex-wrap gap-3 items-center">
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              From
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setPage(1);
+              }}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-900 outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              To
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setPage(1);
+              }}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-900 outline-none focus:border-gray-900 focus:ring-2 focus:ring-gray-200"
+            />
+          </div>
         </div>
 
         {/* Feedback Table */}
@@ -201,7 +333,7 @@ export default function InboxPage() {
             <table className="w-full text-left">
               <thead className="border-b border-gray-200 bg-gray-50/80 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
                 <tr>
-                  <th className="px-6 py-3.5">Content & Themes</th>
+                  <th className="px-6 py-3.5">Content &amp; Themes</th>
                   <th className="px-6 py-3.5">Channel</th>
                   <th className="px-6 py-3.5">Sentiment</th>
                   <th className="px-6 py-3.5">Status</th>
@@ -234,7 +366,7 @@ export default function InboxPage() {
                         </Link>
                         {item.themes && item.themes.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
-                            {item.themes.map((ft: any) => (
+                            {item.themes.map((ft: FeedbackThemeItem) => (
                               <span
                                 key={ft.theme.id}
                                 className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700"

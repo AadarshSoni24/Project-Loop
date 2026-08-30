@@ -6,6 +6,18 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 
+interface CreatedThemeItem {
+  theme: { name: string };
+}
+
+interface CreatedFeedbackItem {
+  id: string;
+  sentiment: string;
+  sentimentScore: number;
+  featureArea?: string;
+  themes?: CreatedThemeItem[];
+}
+
 export default function NewFeedbackPage() {
   const router = useRouter();
 
@@ -14,7 +26,7 @@ export default function NewFeedbackPage() {
   const [customerLabel, setCustomerLabel] = useState("");
   const [sourceRef, setSourceRef] = useState("");
   const [loading, setLoading] = useState(false);
-  const [createdItem, setCreatedItem] = useState<any>(null);
+  const [createdItem, setCreatedItem] = useState<CreatedFeedbackItem | null>(null);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,7 +114,7 @@ export default function NewFeedbackPage() {
                 <div>
                   <span className="text-[10px] font-semibold uppercase text-gray-400">Themes Assigned</span>
                   <p className="font-bold text-gray-900">
-                    {createdItem.themes?.map((t: any) => t.theme.name).join(", ") || "None"}
+                    {createdItem.themes?.map((t: CreatedThemeItem) => t.theme.name).join(", ") || "None"}
                   </p>
                 </div>
                 <div>

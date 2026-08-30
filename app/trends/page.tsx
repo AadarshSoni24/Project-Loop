@@ -4,10 +4,44 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+
+interface DailyVolumeEntry {
+  date: string;
+  count: number;
+}
+
+interface SentimentBreakdown {
+  POS: number;
+  NEU: number;
+  NEG: number;
+}
+
+interface ThemeTrend {
+  themeId: string;
+  themeName: string;
+  color: string;
+  totalFeedbackCount: number;
+  currentPeriodCount: number;
+  previousPeriodCount: number;
+  changePercentage: number;
+  isSpiking: boolean;
+  sentimentBreakdown: SentimentBreakdown;
+  dailyVolume: DailyVolumeEntry[];
+}
 
 export default function TrendsPage() {
-  const [themes, setThemes] = useState<any[]>([]);
-  const [selectedTheme, setSelectedTheme] = useState<any>(null);
+  const [themes, setThemes] = useState<ThemeTrend[]>([]);
+  const [selectedTheme, setSelectedTheme] = useState<ThemeTrend | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,7 +50,7 @@ export default function TrendsPage() {
         const res = await fetch("/api/themes?days=7");
         if (res.ok) {
           const data = await res.json();
-          const items = data.data || [];
+          const items: ThemeTrend[] = data.data || [];
           setThemes(items);
           if (items.length > 0) {
             setSelectedTheme(items[0]);
@@ -33,6 +67,17 @@ export default function TrendsPage() {
 
   const totalTracked = themes.reduce((acc, t) => acc + t.totalFeedbackCount, 0);
   const spikingThemes = themes.filter((t) => t.isSpiking);
+
+  // Build aggregated time-series data for the chart (all themes stacked or top theme)
+  const buildChartData = () => {
+    if (!selectedTheme || !selectedTheme.dailyVolume) return [];
+    return selectedTheme.dailyVolume.map((dv) => ({
+      date: dv.date.slice(5), // MM-DD for compact labels
+      volume: dv.count,
+    }));
+  };
+
+  const chartData = buildChartData();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -90,6 +135,74 @@ export default function TrendsPage() {
             </p>
           </div>
         </div>
+
+        {/* Time-Series Volume Chart (AI2 requirement) */}
+        {selectedTheme && chartData.length > 0 && (
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">
+                  Theme Volume Over Time
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Daily feedback count for &ldquo;{selectedTheme.themeName}&rdquo; over the last 7 days
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: selectedTheme.color || "#3b82f6" }}
+                />
+                <span className="text-xs font-semibold text-gray-700">
+                  {selectedTheme.themeName}
+                </span>
+              </div>
+            </div>
+
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="themeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={selectedTheme.color || "#3b82f6"} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={selectedTheme.color || "#3b82f6"} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11, fill: "#9ca3af" }}
+                  axisLine={{ stroke: "#e5e7eb" }}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "#9ca3af" }}
+                  axisLine={{ stroke: "#e5e7eb" }}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    fontSize: 12,
+                    borderRadius: 8,
+                    border: "1px solid #e5e7eb",
+                    boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                  }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="volume"
+                  name={selectedTheme.themeName}
+                  stroke={selectedTheme.color || "#3b82f6"}
+                  strokeWidth={2}
+                  fill="url(#themeGradient)"
+                  dot={{ r: 3, fill: selectedTheme.color || "#3b82f6" }}
+                  activeDot={{ r: 5, strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {/* Theme Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

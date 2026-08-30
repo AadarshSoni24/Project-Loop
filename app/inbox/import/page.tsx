@@ -5,12 +5,24 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 
+interface PreviewRow {
+  content: string;
+  channel: string;
+  customer_label?: string;
+}
+
+interface ImportResult {
+  totalRows: number;
+  importedCount: number;
+  failedCount: number;
+}
+
 export default function ImportFeedbackPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [previewRows, setPreviewRows] = useState<any[]>([]);
+  const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ImportResult | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -48,7 +60,7 @@ export default function ImportFeedbackPage() {
         return;
       }
 
-      const rows: any[] = [];
+      const rows: PreviewRow[] = [];
       for (let i = 1; i < Math.min(lines.length, 6); i++) {
         const cells = lines[i].split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
         if (cells[contentIdx]) {

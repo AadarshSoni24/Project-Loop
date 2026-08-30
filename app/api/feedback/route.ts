@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   const startDate = url.searchParams.get('startDate');
   const endDate = url.searchParams.get('endDate');
 
-  const where: any = {
+  const where: Record<string, unknown> = {
     workspaceId: sessionUser.workspaceId,
   };
 
@@ -54,9 +54,10 @@ export async function GET(req: NextRequest) {
   }
 
   if (startDate || endDate) {
-    where.createdAt = {};
-    if (startDate) where.createdAt.gte = new Date(startDate);
-    if (endDate) where.createdAt.lte = new Date(endDate);
+    const createdAtFilter: Record<string, Date> = {};
+    if (startDate) createdAtFilter.gte = new Date(startDate);
+    if (endDate) createdAtFilter.lte = new Date(endDate);
+    where.createdAt = createdAtFilter;
   }
 
   const [items, totalCount] = await Promise.all([

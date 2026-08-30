@@ -1,5 +1,10 @@
 import { db } from '@/lib/db';
 
+export interface DailyVolumeEntry {
+  date: string; // YYYY-MM-DD
+  count: number;
+}
+
 export interface ThemeTrendSummary {
   themeId: string;
   themeName: string;
@@ -14,6 +19,7 @@ export interface ThemeTrendSummary {
     NEU: number;
     NEG: number;
   };
+  dailyVolume: DailyVolumeEntry[];
 }
 
 /**
@@ -39,15 +45,28 @@ export async function getThemeTrends(
     },
   });
 
+  // Build the date labels for the daily volume chart (current period)
+  const dateLabels: string[] = [];
+  for (let d = 0; d < periodDays; d++) {
+    const dt = new Date(currentPeriodStart.getTime() + d * 24 * 60 * 60 * 1000);
+    dateLabels.push(dt.toISOString().split('T')[0]);
+  }
+
   const summaries: ThemeTrendSummary[] = themes.map((theme) => {
     let currentCount = 0;
     let previousCount = 0;
     const sentimentBreakdown = { POS: 0, NEU: 0, NEG: 0 };
+    const dailyMap: Record<string, number> = {};
+    dateLabels.forEach((d) => (dailyMap[d] = 0));
 
     theme.feedback.forEach((ft) => {
       const fb = ft.feedback;
       if (fb.createdAt >= currentPeriodStart) {
         currentCount++;
+        const dayKey = fb.createdAt.toISOString().split('T')[0];
+        if (dailyMap[dayKey] !== undefined) {
+          dailyMap[dayKey]++;
+        }
       } else if (fb.createdAt >= previousPeriodStart && fb.createdAt < currentPeriodStart) {
         previousCount++;
       }
@@ -66,6 +85,11 @@ export async function getThemeTrends(
 
     const isSpiking = changePercentage >= 30 && currentCount >= 3;
 
+    const dailyVolume: DailyVolumeEntry[] = dateLabels.map((date) => ({
+      date,
+      count: dailyMap[date] || 0,
+    }));
+
     return {
       themeId: theme.id,
       themeName: theme.name,
@@ -76,6 +100,7 @@ export async function getThemeTrends(
       changePercentage,
       isSpiking,
       sentimentBreakdown,
+      dailyVolume,
     };
   });
 

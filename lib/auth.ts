@@ -24,7 +24,7 @@ if (process.env.NEXTAUTH_URL === '' || !process.env.NEXTAUTH_URL) {
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || "project_loop_super_secret_session_key_2026_zidio",
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
   },

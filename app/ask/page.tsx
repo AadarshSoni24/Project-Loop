@@ -4,10 +4,20 @@ import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 
+interface CitedItem {
+  id: string;
+  content: string;
+  channel: string;
+  sentiment: string;
+  createdAt: string;
+  customerLabel?: string;
+  similarityScore: number;
+}
+
 interface Message {
   role: "user" | "assistant";
   text: string;
-  citedFeedback?: any[];
+  citedFeedback?: CitedItem[];
 }
 
 const STARTER_PROMPTS = [
@@ -131,7 +141,7 @@ export default function AskLoopPage() {
                             Cited Evidence ({m.citedFeedback.length} items)
                           </p>
                           <div className="space-y-2">
-                            {m.citedFeedback.map((cited: any, cIdx: number) => (
+                            {m.citedFeedback.map((cited: CitedItem, cIdx: number) => (
                               <div
                                 key={cIdx}
                                 className="rounded-lg bg-white p-3 border border-gray-200 text-xs shadow-2xs"

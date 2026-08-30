@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role, Sentiment, FeedbackStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -81,7 +81,7 @@ async function main() {
       name: 'Alice Admin',
       email: 'admin@acme.com',
       passwordHash,
-      role: 'ADMIN',
+      role: Role.ADMIN,
       workspaceId: workspace.id,
     },
   });
@@ -91,7 +91,7 @@ async function main() {
       name: 'Bob Analyst',
       email: 'analyst@acme.com',
       passwordHash,
-      role: 'ANALYST',
+      role: Role.ANALYST,
       workspaceId: workspace.id,
     },
   });
@@ -101,7 +101,7 @@ async function main() {
       name: 'Charlie Viewer',
       email: 'viewer@acme.com',
       passwordHash,
-      role: 'VIEWER',
+      role: Role.VIEWER,
       workspaceId: workspace.id,
     },
   });
@@ -141,7 +141,7 @@ async function main() {
     const daysAgo = Math.floor(Math.random() * 30);
     const createdAt = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000 - Math.random() * 3600000);
 
-    const statuses = ['NEW', 'REVIEWED', 'ACTIONED'];
+    const statuses: FeedbackStatus[] = [FeedbackStatus.NEW, FeedbackStatus.REVIEWED, FeedbackStatus.ACTIONED];
     const status = statuses[i % 3];
 
     feedbackRecords.push({
@@ -149,7 +149,7 @@ async function main() {
       channel: template.channel,
       sourceRef: `REF-${2000 + i}`,
       customerLabel: `Customer #${100 + (i % 20)}`,
-      sentiment: template.sentiment,
+      sentiment: template.sentiment as Sentiment,
       sentimentScore: template.score,
       featureArea: template.area,
       status,

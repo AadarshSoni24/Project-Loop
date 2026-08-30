@@ -5,8 +5,19 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 
+interface ReportSummary {
+  id: string;
+  title: string;
+  periodStart: string;
+  periodEnd: string;
+  createdAt: string;
+  content?: {
+    periodStats?: { totalVolume?: number };
+  };
+}
+
 export default function ReportsPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<ReportSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadReports = async () => {

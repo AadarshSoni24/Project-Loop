@@ -6,11 +6,51 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 
+interface ThemeItem {
+  name: string;
+  count: number;
+  changePercentage: number;
+  isSpiking: boolean;
+}
+
+interface QuoteItem {
+  content: string;
+  channel: string;
+  sentiment: string;
+}
+
+interface PeriodStats {
+  totalVolume: number;
+  positiveCount: number;
+  neutralCount: number;
+  negativeCount: number;
+  negativeRatio: number;
+}
+
+interface ReportContent {
+  title: string;
+  summary: string;
+  periodStats: PeriodStats;
+  topThemes: ThemeItem[];
+  notableQuotes: QuoteItem[];
+  recommendedActions: string[];
+}
+
+interface ReportData {
+  id: string;
+  title: string;
+  periodStart: string;
+  periodEnd: string;
+  createdAt: string;
+  generatedBy: string;
+  content: ReportContent;
+}
+
 export default function ReportDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [report, setReport] = useState<any>(null);
+  const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -173,7 +213,7 @@ export default function ReportDetailPage() {
                   </h3>
 
                   <div className="divide-y divide-gray-100 text-xs">
-                    {report.content.topThemes.map((theme: any, idx: number) => (
+                    {report.content.topThemes.map((theme: ThemeItem, idx: number) => (
                       <div key={idx} className="py-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-gray-900">{theme.name}</span>
@@ -203,7 +243,7 @@ export default function ReportDetailPage() {
                   </h3>
 
                   <div className="space-y-3 text-xs">
-                    {report.content.notableQuotes.map((q: any, idx: number) => (
+                    {report.content.notableQuotes.map((q: QuoteItem, idx: number) => (
                       <div key={idx} className="rounded-lg bg-gray-50 p-4 border border-gray-100">
                         <p className="text-gray-800 italic">&ldquo;{q.content}&rdquo;</p>
                         <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400 font-medium">
