@@ -1,4 +1,4 @@
-﻿# LOOP — AI Customer-Feedback Intelligence Platform
+# LOOP — AI Customer-Feedback Intelligence Platform
 
 > Turns scattered customer feedback into a ranked, evidence-backed list of what to do next.
 
@@ -224,7 +224,9 @@ Project Loop/
 ## 9. Team
 
 - **Aadarsh Soni** — *Full-Stack Architecture, AI Engine Integrations, Database Design & UI Engineering*
-- `[Team Member Name]` — `[Module / Area Owned]` *(Optional placeholder for additional contributors)*
+- **Ashika Soni** — *Frontend Engineering & Voice-of-Customer Report Generation* — built the frontend views for the reporting flow, including the report list, detail view, and export experience that turns aggregated feedback data into a leadership-ready digest.
+- **Akriti Dhote** — *Frontend Engineering & Demo Video Production* — contributed to core frontend interfaces and led production of the project's demo video, translating the working product into a clear, presentable walkthrough of every feature.
+- **Mohit Vaishnav** — *Backend Engineering* — responsible for the server-side API layer, route handlers, and business logic powering the platform's core and AI-driven functionality.
 
 ---
 
