@@ -18,14 +18,20 @@
 ![Feedback Item Classification Detail](./screenshots/feedback-detail.png)
 *Figure 4: Detailed view showing extracted sentiment score, feature area, assigned themes, and vector embedding.*
 
-![Theme Clustering & Trends View](./screenshots/trends.png)
-*Figure 5: Time-series area chart displaying theme volume growth and emerging surge flags.*
+![Theme Clustering & Trends Time-Series Chart](./screenshots/trends.png)
+*Figure 5: Time-series area chart displaying theme volume growth over time.*
+
+![Theme Clustering & Surge Breakdown](./screenshots/trends2.png)
+*Figure 6: Granular theme volume tracking, percentage change, and surge status overview.*
 
 ![Ask LOOP Grounded Q&A Interface](./screenshots/ask-loop.png)
-*Figure 6: Retrieval-Augmented Generation (RAG) assistant answering questions with cited feedback evidence.*
+*Figure 7: Retrieval-Augmented Generation (RAG) assistant answering questions with cited feedback evidence.*
 
-![Voice-of-Customer Executive Report View](./screenshots/voc-report.png)
-*Figure 7: Generated Voice-of-Customer executive digest with key statistics, verbatim quotes, and action recommendations.*
+![Voice-of-Customer Reports List](./screenshots/voc-report.png)
+*Figure 8: Generated Voice-of-Customer executive digests archive with period stats.*
+
+![Voice-of-Customer Executive Report Digest](./screenshots/voc-report-digest.png)
+*Figure 9: Detailed executive report narrative with key statistics, verbatim quotes, and action recommendations.*
 
 ---
 
@@ -206,6 +212,7 @@ Project Loop/
 │   ├── schema.prisma           # Prisma data model with enums and relations
 │   └── seed.ts                 # Workspace, users, themes, and 125 feedback seed script
 ├── public/                     # Static media, icons, and asset files
+├── screenshots/                # Application UI screenshots for documentation
 ├── test_backend.ts             # Automated integration test suite for backend and AI modules
 ├── package.json                # Project dependencies and script declarations
 ├── tailwind.config.ts          # Tailwind CSS theme configuration
