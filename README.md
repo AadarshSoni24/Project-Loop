@@ -156,7 +156,7 @@ Every database query touching feedback, themes, reports, or embeddings strictly 
    npm run start
    ```
 
----
+-
 
 ## 7. Demo Credentials
 
