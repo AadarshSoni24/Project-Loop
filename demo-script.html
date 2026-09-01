@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project LOOP — Official 2-Minute Demo Video Script</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      color: #1e293b;
+      background: #ffffff;
+      padding: 32px 40px;
+      max-width: 850px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 6px 0;
+    }
+    
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+    }
+    
+    .badge-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .badge {
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .section-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+    }
+    
+    .section-card:nth-child(even) {
+      background: #f8fafc;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .section-num {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    
+    .timestamp {
+      font-size: 11px;
+      font-weight: 700;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    .action-box {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #1e40af;
+      margin-bottom: 10px;
+      border-radius: 0 6px 6px 0;
+    }
+    
+    .speech-box {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #0f172a;
+      font-style: italic;
+    }
+    
+    .speech-box strong {
+      font-style: normal;
+      color: #0f172a;
+    }
+
+    .tip-box {
+      margin-top: 24px;
+      background: #fefce8;
+      border: 1px solid #fef08a;
+      padding: 14px 18px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #854d0e;
+    }
+
+    @media print {
+      body { padding: 0; }
+      .tip-box { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1 class="title">🎬 Project LOOP — Fast-Paced 2-Minute Demo Video Script</h1>
+    <p class="subtitle">Zidio Development Internship Program (Corporate Track) • Target Duration: <strong>2:00 – 2:20 Minutes</strong></p>
+    <div class="badge-bar">
+      <span class="badge">⏱️ Total Time: 130 Seconds</span>
+      <span class="badge">🎯 Crisp & High-Impact</span>
+      <span class="badge">🤖 Covers All 4 AI Modules</span>
+    </div>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="section-card">
+    <div class="card-header">
+      <span class="section-num">1. Hook & Platform Overview</span>
+      <span class="timestamp">0:00 – 0:20 (20s)</span>
+    </div>
+    <div class="action-box">
+      <strong>💻 Screen on:</strong> Login Page (<code>localhost:3000/login</code>) &rarr; Click <strong>"Admin"</strong> quick-fill &rarr; Click <strong>Sign In</strong>.
+    </div>
+    <div class="speech-box">
+      "Hello everyone! This is <strong>Project LOOP</strong>, an AI-powered customer feedback intelligence platform. In modern businesses, customer feedback is scattered across support tickets, app reviews, and sales calls. LOOP aggregates this feedback and uses Claude AI to turn raw customer voices into a ranked, evidence-backed action list. Built with <strong>Next.js 14 App Router, TypeScript, PostgreSQL via Prisma, and Anthropic Claude 3.5 Sonnet</strong>."
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="section-card">
+    <div class="card-header">
+      <span class="section-num">2. Executive Dashboard & Metrics</span>
+      <span class="timestamp">0:20 – 0:40 (20s)</span>
+    </div>
+    <div class="action-box">
+      <strong>💻 Screen on:</strong> Dashboard (<code>/dashboard</code>) &rarr; Briefly hover over metrics, sentiment doughnut, and weekly volume graph.
+    </div>
+    <div class="speech-box">
+      "The Executive Dashboard provides an instant pulse on customer health — tracking total feedback volume, positive vs. negative friction ratios, a 5-star customer satisfaction score, and weekly volume trends. Everything is protected with strict multi-tenant workspace isolation."
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="section-card">
+    <div class="card-header">
+      <span class="section-num">3. Multi-Channel Ingestion & AI1: Auto-Classification</span>
+      <span class="timestamp">0:40 – 1:05 (25s)</span>
+    </div>
+    <div class="action-box">
+      <strong>💻 Screen on:</strong> Click <strong>"Inbox"</strong> &rarr; <strong>"+ Add Feedback"</strong> &rarr; Type sample: <em>"Billing invoice download is timing out on Chrome"</em> &rarr; Click <strong>Submit</strong> &rarr; Point to green AI classification card.
+    </div>
+    <div class="speech-box">
+      "LOOP supports multi-channel ingestion — manual entry, CSV bulk import, and streaming channels. When feedback enters the system, our <strong>first AI module</strong> classifies it in real-time — extracting exact sentiment score, categorizing the feature area into Billing, assigning standardized taxonomy themes, and generating a 64-dimensional semantic embedding."
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="section-card">
+    <div class="card-header">
+      <span class="section-num">4. Inbox Filters & Status Workflow</span>
+      <span class="timestamp">1:05 – 1:25 (20s)</span>
+    </div>
+    <div class="action-box">
+      <strong>💻 Screen on:</strong> Inbox (<code>/inbox</code>) &rarr; Filter by <strong>Negative</strong> sentiment or select a <strong>Theme</strong> dropdown &rarr; Change a row status dropdown from <code>NEW</code> to <code>REVIEWED</code>.
+    </div>
+    <div class="speech-box">
+      "In the Feedback Inbox, product teams can filter by date ranges, channels, sentiments, or themes, and manage workflow statuses from <em>NEW</em> to <em>REVIEWED</em> and <em>ACTIONED</em> with optimistic UI updates."
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="section-card">
+    <div class="card-header">
+      <span class="section-num">5. AI2: Theme Clustering & Spike Surge Detection</span>
+      <span class="timestamp">1:25 – 1:45 (20s)</span>
+    </div>
+    <div class="action-box">
+      <strong>💻 Screen on:</strong> Trends & Spikes (<code>/trends</code>) &rarr; Point to the Recharts Area Chart and the <strong>Surge / Spiking</strong> badges.
+    </div>
+    <div class="speech-box">
+      "Our <strong>second AI module</strong> tracks feedback velocity over 7, 30, and 90 days. It computes period-over-period growth rates and automatically flags critical volume surges — so engineering teams can catch emerging bugs before they escalate."
+    </div>
+  </div>
+
+  <!-- Step 6 -->
+  <div class="section-card">
+    <div class="card-header">
+      <span class="section-num">6. AI3: Ask LOOP (Grounded RAG Q&A)</span>
+      <span class="timestamp">1:45 – 2:05 (20s)</span>
+    </div>
+    <div class="action-box">
+      <strong>💻 Screen on:</strong> Ask LOOP (<code>/ask</code>) &rarr; Click prompt chip <em>"What are customers saying about onboarding?"</em> &rarr; Show answer and cited customer evidence cards.
+    </div>
+    <div class="speech-box">
+      "With <strong>Ask LOOP</strong>, stakeholders query customer sentiment using natural language. Powered by 64-dimensional vector similarity, Claude retrieves matching customer quotes and generates grounded answers citing specific evidence — completely eliminating hallucinations."
+    </div>
+  </div>
+
+  <!-- Step 7 -->
+  <div class="section-card">
+    <div class="card-header">
+      <span class="section-num">7. AI4: VoC Executive Reports & Conclusion</span>
+      <span class="timestamp">2:05 – 2:20 (15s)</span>
+    </div>
+    <div class="action-box">
+      <strong>💻 Screen on:</strong> VoC Reports &rarr; Click <strong>"Open Digest →"</strong> &rarr; Briefly scroll down summary, stats & verbatim quotes.
+    </div>
+    <div class="speech-box">
+      "Finally, our <strong>fourth AI module</strong> synthesizes comprehensive Voice-of-Customer Executive Digests with key metrics, verbatim customer quotes, and actionable recommendations — fully exportable to PDF for executive leadership. Thank you!"
+    </div>
+  </div>
+
+  <div class="tip-box">
+    💡 <strong>How to save as PDF:</strong> Open this file in Chrome/Brave/Edge (<code>Project Loop/demo-script.html</code>) and press <strong>Ctrl + P</strong> &rarr; Select <strong>"Save as PDF"</strong>.
+  </div>
+
+</body>
+</html>
