@@ -45,12 +45,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword("admin123");
-    setError("");
-  };
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-6 py-12">
       <div className="w-full max-w-md">
@@ -140,36 +134,6 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
-
-          {/* Quick Demo Accounts Helper */}
-          <div className="mt-6 pt-5 border-t border-gray-100">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2.5 text-center">
-              Quick Fill Demo Accounts (Password: admin123)
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("admin@acme.com")}
-                className="rounded-lg border border-purple-200 bg-purple-50/60 py-1.5 px-2 text-center text-xs font-semibold text-purple-700 hover:bg-purple-100 transition"
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("analyst@acme.com")}
-                className="rounded-lg border border-blue-200 bg-blue-50/60 py-1.5 px-2 text-center text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
-              >
-                Analyst
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("viewer@acme.com")}
-                className="rounded-lg border border-gray-200 bg-gray-50 py-1.5 px-2 text-center text-xs font-semibold text-gray-700 hover:bg-gray-100 transition"
-              >
-                Viewer
-              </button>
-            </div>
-          </div>
 
           {/* Signup Link */}
           <div className="mt-6 text-center text-xs text-gray-600">
