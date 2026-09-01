@@ -1,41 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
+import { getThemeTrends } from "@/lib/ai/clustering";
 
+/**
+ * Combined dashboard endpoint — returns analytics, recent feedback, AND theme trends
+ * in a SINGLE API call instead of 3 separate ones.
+ */
 export async function GET(req: NextRequest) {
   const { sessionUser, errorResponse } = await requireAuth();
   if (errorResponse) return errorResponse;
 
   try {
-    const url = new URL(req.url);
-    const channel = url.searchParams.get("channel");
-    const sentiment = url.searchParams.get("sentiment");
-    const status = url.searchParams.get("status");
-    const startDate = url.searchParams.get("startDate");
-    const endDate = url.searchParams.get("endDate");
+    const workspaceId = sessionUser.workspaceId;
 
-    // Build dynamic filter
-    const where: Record<string, unknown> = {
-      workspaceId: sessionUser.workspaceId,
-    };
+    const where = { workspaceId };
 
-    if (channel) where.channel = channel;
-    if (sentiment) where.sentiment = sentiment;
-    if (status) where.status = status;
-
-    if (startDate || endDate) {
-      const createdAtFilter: Record<string, Date> = {};
-      if (startDate) createdAtFilter.gte = new Date(startDate);
-      if (endDate) createdAtFilter.lte = new Date(endDate);
-      where.createdAt = createdAtFilter;
-    }
-
-    // Use parallel aggregate queries instead of fetching ALL rows
-    const [totalCount, sentimentCounts, themeData] = await Promise.all([
-      // Total count
+    // Run ALL queries in parallel — single network roundtrip to DB
+    const [
+      totalCount,
+      sentimentCounts,
+      themeGroupData,
+      recentFeedback,
+      themeTrends,
+    ] = await Promise.all([
       db.feedback.count({ where }),
 
-      // Sentiment counts via groupBy (no full row fetch)
       db.feedback.groupBy({
         by: ["sentiment"],
         where,
@@ -43,24 +33,31 @@ export async function GET(req: NextRequest) {
         _avg: { sentimentScore: true },
       }),
 
-      // Theme breakdown via aggregation on FeedbackTheme join
       db.feedbackTheme.groupBy({
         by: ["themeId"],
-        where: {
-          feedback: where,
-        },
+        where: { feedback: where },
         _count: { feedbackId: true },
         orderBy: { _count: { feedbackId: "desc" } },
         take: 6,
       }),
+
+      db.feedback.findMany({
+        where,
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          themes: {
+            include: { theme: true },
+          },
+        },
+      }),
+
+      getThemeTrends(workspaceId, 7),
     ]);
 
-    // Parse sentiment counts
-    let positiveCount = 0;
-    let neutralCount = 0;
-    let negativeCount = 0;
-    let totalWeightedScore = 0;
-    let totalScoreEntries = 0;
+    // Parse sentiment
+    let positiveCount = 0, neutralCount = 0, negativeCount = 0;
+    let totalWeightedScore = 0, totalScoreEntries = 0;
 
     sentimentCounts.forEach((g) => {
       const count = g._count.id;
@@ -75,70 +72,58 @@ export async function GET(req: NextRequest) {
     const positivePercent = totalCount > 0 ? Math.round((positiveCount / totalCount) * 100) : 0;
     const neutralPercent = totalCount > 0 ? Math.round((neutralCount / totalCount) * 100) : 0;
     const negativePercent = totalCount > 0 ? Math.round((negativeCount / totalCount) * 100) : 0;
-
     const avgScore = totalScoreEntries > 0 ? totalWeightedScore / totalScoreEntries : 0;
     const avgRating = Math.round(((avgScore + 1) * 2 + 1) * 10) / 10;
 
-    // Get daily trend for the last 7 days using lightweight select
+    // Daily trend
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const recentFeedback = await db.feedback.findMany({
-      where: {
-        ...where,
-        createdAt: { gte: sevenDaysAgo },
-      },
+    const trendData = await db.feedback.findMany({
+      where: { ...where, createdAt: { gte: sevenDaysAgo } },
       select: { createdAt: true },
     });
 
-    const dayMap: { [key: string]: number } = {};
-    recentFeedback.forEach((f) => {
+    const dayMap: Record<string, number> = {};
+    trendData.forEach((f) => {
       const dayName = new Date(f.createdAt).toLocaleDateString("en-US", { weekday: "short" });
       dayMap[dayName] = (dayMap[dayName] || 0) + 1;
     });
 
     const daysOrder = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const dailyTrend = daysOrder.map((day) => ({
-      day,
-      feedback: dayMap[day] || 0,
-    }));
+    const dailyTrend = daysOrder.map((day) => ({ day, feedback: dayMap[day] || 0 }));
 
-    // Resolve theme names for the top themes
+    // Resolve theme names
     let themeBreakdown: { theme: string; feedback: number }[] = [];
-    if (themeData.length > 0) {
-      const themeIds = themeData.map((t) => t.themeId);
+    if (themeGroupData.length > 0) {
+      const themeIds = themeGroupData.map((t) => t.themeId);
       const themeNames = await db.theme.findMany({
         where: { id: { in: themeIds } },
         select: { id: true, name: true },
       });
       const nameMap = Object.fromEntries(themeNames.map((t) => [t.id, t.name]));
-      themeBreakdown = themeData.map((t) => ({
+      themeBreakdown = themeGroupData.map((t) => ({
         theme: nameMap[t.themeId] || "Unknown",
         feedback: t._count.feedbackId,
       }));
     }
 
     const response = NextResponse.json({
-      totalCount,
-      sentiment: {
-        positiveCount,
-        neutralCount,
-        negativeCount,
-        positivePercent,
-        neutralPercent,
-        negativePercent,
+      analytics: {
+        totalCount,
+        sentiment: { positiveCount, neutralCount, negativeCount, positivePercent, neutralPercent, negativePercent },
+        avgRating,
+        dailyTrend,
+        themeBreakdown,
       },
-      avgRating,
-      dailyTrend,
-      themeBreakdown,
+      recentFeedback,
+      themeTrends,
     });
 
-    // Cache for 30 seconds on the client to avoid re-fetching on navigation
     response.headers.set("Cache-Control", "private, max-age=30, stale-while-revalidate=60");
     return response;
   } catch (err) {
     return NextResponse.json(
-      { error: "Analytics Error", message: (err as Error).message },
+      { error: "Dashboard Error", message: (err as Error).message },
       { status: 500 }
     );
   }

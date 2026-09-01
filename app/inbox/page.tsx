@@ -40,19 +40,29 @@ export default function InboxPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [themeOptions, setThemeOptions] = useState<ThemeOption[]>([]);
 
-  // Load theme options for the filter dropdown
+  // Load theme options for the filter dropdown (with cache)
   useEffect(() => {
     async function loadThemes() {
       try {
+        // Check cache first
+        const cacheKey = "loop_inbox_themes";
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          const { data, ts } = JSON.parse(cached);
+          if (Date.now() - ts < 120_000) {
+            setThemeOptions(data);
+          }
+        }
+
         const res = await fetch("/api/themes?days=365");
         if (res.ok) {
           const data = await res.json();
-          setThemeOptions(
-            (data.data || []).map((t: { themeId: string; themeName: string }) => ({
-              themeId: t.themeId,
-              themeName: t.themeName,
-            }))
-          );
+          const opts = (data.data || []).map((t: { themeId: string; themeName: string }) => ({
+            themeId: t.themeId,
+            themeName: t.themeName,
+          }));
+          setThemeOptions(opts);
+          sessionStorage.setItem(cacheKey, JSON.stringify({ data: opts, ts: Date.now() }));
         }
       } catch (err) {
         console.error("Failed to load theme options:", err);

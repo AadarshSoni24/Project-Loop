@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import FeedbackChart from "@/components/FeedbackChart";
@@ -51,6 +51,70 @@ interface ThemeTrendItem {
   isSpiking: boolean;
 }
 
+const CACHE_KEY = "loop_dashboard_cache";
+const CACHE_TTL = 60_000; // 60 seconds
+
+function getCachedData() {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp < CACHE_TTL) return data;
+    sessionStorage.removeItem(CACHE_KEY);
+  } catch {}
+  return null;
+}
+
+function setCachedData(data: unknown) {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
+// Skeleton pulse block
+function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded-lg bg-gray-200 ${className}`} />;
+}
+
+function MetricCardSkeleton() {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-8 w-8 rounded-lg" />
+      </div>
+      <Skeleton className="mt-3 h-8 w-20" />
+      <Skeleton className="mt-2 h-3 w-32" />
+    </div>
+  );
+}
+
+function ChartSkeleton({ className = "" }: { className?: string }) {
+  return (
+    <div className={`rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm ${className}`}>
+      <Skeleton className="h-4 w-40 mb-2" />
+      <Skeleton className="h-3 w-56 mb-4" />
+      <Skeleton className="h-48 w-full" />
+    </div>
+  );
+}
+
+function FeedbackRowSkeleton() {
+  return (
+    <div className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex-1 space-y-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <Skeleton className="h-4 w-full max-w-md" />
+        <Skeleton className="h-4 w-3/4 max-w-sm" />
+      </div>
+      <Skeleton className="h-8 w-24 rounded-lg" />
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [stats, setStats] = useState<AnalyticsData | null>(null);
@@ -58,46 +122,46 @@ export default function DashboardPage() {
   const [themes, setThemes] = useState<ThemeTrendItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        const [analyticsRes, feedbackRes, themesRes] = await Promise.all([
-          fetch("/api/analytics"),
-          fetch("/api/feedback?limit=5"),
-          fetch("/api/themes?days=7"),
-        ]);
-
-        if (analyticsRes.ok) {
-          const aData: AnalyticsData = await analyticsRes.json();
-          setStats(aData);
-        }
-
-        if (feedbackRes.ok) {
-          const fData = await feedbackRes.json();
-          setRecentFeedback(fData.data || []);
-        }
-
-        if (themesRes.ok) {
-          const tData = await themesRes.json();
-          setThemes(tData.data || []);
-        }
-      } catch (err) {
-        console.error("Dashboard data load error:", err);
-      } finally {
-        setLoading(false);
+  const loadDashboardData = useCallback(async () => {
+    try {
+      // Single API call instead of 3 separate ones
+      const res = await fetch("/api/dashboard");
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data.analytics);
+        setRecentFeedback(data.recentFeedback || []);
+        setThemes(data.themeTrends || []);
+        setCachedData(data);
       }
+    } catch (err) {
+      console.error("Dashboard data load error:", err);
+    } finally {
+      setLoading(false);
     }
-
-    loadDashboardData();
   }, []);
 
-  const totalCount = stats?.totalCount ?? 125;
-  const positivePercent = stats?.sentiment?.positivePercent ?? 39;
-  const neutralPercent = stats?.sentiment?.neutralPercent ?? 22;
-  const negativePercent = stats?.sentiment?.negativePercent ?? 38;
-  const avgRating = stats?.avgRating ?? 3.8;
+  useEffect(() => {
+    // Try showing cached data instantly
+    const cached = getCachedData();
+    if (cached) {
+      setStats(cached.analytics);
+      setRecentFeedback(cached.recentFeedback || []);
+      setThemes(cached.themeTrends || []);
+      setLoading(false);
+    }
+
+    // Always fetch fresh data (even if cache hit — stale-while-revalidate pattern)
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const totalCount = stats?.totalCount ?? 0;
+  const positivePercent = stats?.sentiment?.positivePercent ?? 0;
+  const neutralPercent = stats?.sentiment?.neutralPercent ?? 0;
+  const negativePercent = stats?.sentiment?.negativePercent ?? 0;
+  const avgRating = stats?.avgRating ?? 0;
 
   const spikingThemes = themes.filter((t) => t.isSpiking);
+  const showSkeleton = loading && !stats;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex">
@@ -140,102 +204,123 @@ export default function DashboardPage() {
 
         {/* Top Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {/* Total Feedback */}
-          <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Total Feedback
-              </p>
-              <div className="p-2 rounded-lg bg-gray-50 text-gray-700">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
+          {showSkeleton ? (
+            <>
+              <MetricCardSkeleton />
+              <MetricCardSkeleton />
+              <MetricCardSkeleton />
+              <MetricCardSkeleton />
+            </>
+          ) : (
+            <>
+              {/* Total Feedback */}
+              <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Total Feedback
+                  </p>
+                  <div className="p-2 rounded-lg bg-gray-50 text-gray-700">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="mt-2 text-3xl font-bold text-gray-900">
+                  {totalCount.toLocaleString()}
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  Analyzed in workspace
+                </p>
               </div>
-            </div>
-            <h3 className="mt-2 text-3xl font-bold text-gray-900">
-              {totalCount.toLocaleString()}
-            </h3>
-            <p className="mt-1 text-xs text-gray-500">
-              Analyzed in workspace
-            </p>
-          </div>
 
-          {/* Positive Sentiment */}
-          <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Positive Sentiment
-              </p>
-              <div className="p-2 rounded-lg bg-green-50 text-green-600">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              {/* Positive Sentiment */}
+              <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Positive Sentiment
+                  </p>
+                  <div className="p-2 rounded-lg bg-green-50 text-green-600">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="mt-2 text-3xl font-bold text-green-600">
+                  {positivePercent}%
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  {stats?.sentiment?.positiveCount ?? 0} feedback entries
+                </p>
               </div>
-            </div>
-            <h3 className="mt-2 text-3xl font-bold text-green-600">
-              {positivePercent}%
-            </h3>
-            <p className="mt-1 text-xs text-gray-500">
-              {stats?.sentiment?.positiveCount ?? 49} feedback entries
-            </p>
-          </div>
 
-          {/* Negative Sentiment */}
-          <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Negative / Friction
-              </p>
-              <div className="p-2 rounded-lg bg-red-50 text-red-600">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              {/* Negative Sentiment */}
+              <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Negative / Friction
+                  </p>
+                  <div className="p-2 rounded-lg bg-red-50 text-red-600">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="mt-2 text-3xl font-bold text-red-600">
+                  {negativePercent}%
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  {stats?.sentiment?.negativeCount ?? 0} entries needing action
+                </p>
               </div>
-            </div>
-            <h3 className="mt-2 text-3xl font-bold text-red-600">
-              {negativePercent}%
-            </h3>
-            <p className="mt-1 text-xs text-gray-500">
-              {stats?.sentiment?.negativeCount ?? 48} entries needing action
-            </p>
-          </div>
 
-          {/* Satisfaction Score */}
-          <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Satisfaction Rating
-              </p>
-              <div className="p-2 rounded-lg bg-yellow-50 text-yellow-600">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
+              {/* Satisfaction Score */}
+              <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-lg p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Satisfaction Rating
+                  </p>
+                  <div className="p-2 rounded-lg bg-yellow-50 text-yellow-600">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="mt-2 text-3xl font-bold text-gray-900">
+                  {avgRating} <span className="text-base text-gray-400 font-normal">/ 5.0</span>
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  Estimated customer score
+                </p>
               </div>
-            </div>
-            <h3 className="mt-2 text-3xl font-bold text-gray-900">
-              {avgRating} <span className="text-base text-gray-400 font-normal">/ 5.0</span>
-            </h3>
-            <p className="mt-1 text-xs text-gray-500">
-              Estimated customer score
-            </p>
-          </div>
+            </>
+          )}
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <FeedbackChart data={stats?.dailyTrend} />
-          </div>
-          <div>
-            <SentimentChart
-              positive={positivePercent}
-              neutral={neutralPercent}
-              negative={negativePercent}
-            />
-          </div>
-          <div>
-            <ThemeBarChart />
-          </div>
+          {showSkeleton ? (
+            <>
+              <ChartSkeleton className="lg:col-span-2" />
+              <ChartSkeleton />
+              <ChartSkeleton />
+            </>
+          ) : (
+            <>
+              <div className="lg:col-span-2">
+                <FeedbackChart data={stats?.dailyTrend} />
+              </div>
+              <div>
+                <SentimentChart
+                  positive={positivePercent}
+                  neutral={neutralPercent}
+                  negative={negativePercent}
+                />
+              </div>
+              <div>
+                <ThemeBarChart />
+              </div>
+            </>
+          )}
         </div>
 
         {/* Recent Feedback Feed */}
@@ -258,7 +343,13 @@ export default function DashboardPage() {
           </div>
 
           <div className="divide-y divide-gray-100">
-            {recentFeedback.length === 0 ? (
+            {showSkeleton ? (
+              <>
+                <FeedbackRowSkeleton />
+                <FeedbackRowSkeleton />
+                <FeedbackRowSkeleton />
+              </>
+            ) : recentFeedback.length === 0 ? (
               <div className="p-8 text-center text-xs text-gray-500">
                 No feedback recorded yet. Add some or pull from channels!
               </div>

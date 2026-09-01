@@ -5,23 +5,25 @@ import { getToken } from 'next-auth/jwt';
 /**
  * Next.js Middleware for Route Protection
  * Redirects unauthenticated users to /login for all protected routes.
+ * API routes are excluded here since they handle auth internally via requireAuth().
  */
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
   const { pathname } = req.nextUrl;
 
-  // Allow public routes: /login, /signup, /api/auth/*, static assets, favicon
+  // Allow public routes: /login, /signup, /api/*, static assets, favicon
+  // API routes have their own auth via requireAuth() — no need for double JWT checks
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
-    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
     pathname === '/'
   ) {
     return NextResponse.next();
   }
+
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
   // Redirect unauthenticated users to login
   if (!token) {
@@ -40,7 +42,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization)
      * - favicon.ico
+     * - api routes (handled by their own auth)
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/).*)',
   ],
 };

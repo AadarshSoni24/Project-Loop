@@ -25,7 +25,11 @@ export default function ReportsPage() {
       const res = await fetch("/api/reports");
       if (res.ok) {
         const data = await res.json();
-        setReports(data.data || []);
+        const items = data.data || [];
+        setReports(items);
+        try {
+          sessionStorage.setItem("loop_reports_cache", JSON.stringify({ data: items, ts: Date.now() }));
+        } catch {}
       }
     } catch (err) {
       console.error("Failed to load reports:", err);
@@ -35,6 +39,17 @@ export default function ReportsPage() {
   };
 
   useEffect(() => {
+    // Show cached data immediately
+    try {
+      const cached = sessionStorage.getItem("loop_reports_cache");
+      if (cached) {
+        const { data, ts } = JSON.parse(cached);
+        if (Date.now() - ts < 120_000) {
+          setReports(data);
+          setLoading(false);
+        }
+      }
+    } catch {}
     loadReports();
   }, []);
 

@@ -21,17 +21,48 @@ import {
 
 const SENTIMENT_COLORS = ["#10b981", "#64748b", "#ef4444"];
 
+const CACHE_KEY = "loop_analytics_cache";
+const CACHE_TTL = 60_000;
+
+function getCachedData() {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp < CACHE_TTL) return data;
+  } catch {}
+  return null;
+}
+
+function setCachedData(data: unknown) {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
+function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse rounded-lg bg-gray-200 ${className}`} />;
+}
+
 export default function AnalyticsPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Show cached data immediately
+    const cached = getCachedData();
+    if (cached) {
+      setStats(cached);
+      setLoading(false);
+    }
+
     async function loadAnalytics() {
       try {
         const res = await fetch("/api/analytics");
         if (res.ok) {
           const data = await res.json();
           setStats(data);
+          setCachedData(data);
         }
       } catch (err) {
         console.error("Failed to load analytics:", err);
@@ -42,11 +73,11 @@ export default function AnalyticsPage() {
     loadAnalytics();
   }, []);
 
-  const totalCount = stats?.totalCount ?? 125;
-  const positivePercent = stats?.sentiment?.positivePercent ?? 39;
-  const neutralPercent = stats?.sentiment?.neutralPercent ?? 22;
-  const negativePercent = stats?.sentiment?.negativePercent ?? 38;
-  const avgRating = stats?.avgRating ?? 3.8;
+  const totalCount = stats?.totalCount ?? 0;
+  const positivePercent = stats?.sentiment?.positivePercent ?? 0;
+  const neutralPercent = stats?.sentiment?.neutralPercent ?? 0;
+  const negativePercent = stats?.sentiment?.negativePercent ?? 0;
+  const avgRating = stats?.avgRating ?? 0;
 
   const sentimentPieData = [
     { name: "Positive", value: positivePercent },

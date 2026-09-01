@@ -39,12 +39,40 @@ interface ThemeTrend {
   dailyVolume: DailyVolumeEntry[];
 }
 
+const CACHE_KEY = "loop_trends_cache";
+const CACHE_TTL = 60_000;
+
+function getCachedData() {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp < CACHE_TTL) return data;
+  } catch {}
+  return null;
+}
+
+function setCachedData(data: unknown) {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
 export default function TrendsPage() {
   const [themes, setThemes] = useState<ThemeTrend[]>([]);
   const [selectedTheme, setSelectedTheme] = useState<ThemeTrend | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Show cached data immediately
+    const cached = getCachedData();
+    if (cached) {
+      const items: ThemeTrend[] = cached;
+      setThemes(items);
+      if (items.length > 0) setSelectedTheme(items[0]);
+      setLoading(false);
+    }
+
     async function loadThemes() {
       try {
         const res = await fetch("/api/themes?days=7");
@@ -55,6 +83,7 @@ export default function TrendsPage() {
           if (items.length > 0) {
             setSelectedTheme(items[0]);
           }
+          setCachedData(items);
         }
       } catch (err) {
         console.error("Failed to load themes:", err);

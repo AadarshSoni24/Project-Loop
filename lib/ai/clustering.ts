@@ -24,7 +24,7 @@ export interface ThemeTrendSummary {
 
 /**
  * AI2: Theme Clustering & Trend Spike Detection Service
- * Analyzes workspace theme counts over current vs previous period to calculate deltas & flag spikes.
+ * Optimized: Uses targeted count queries instead of fetching all feedback rows.
  */
 export async function getThemeTrends(
   workspaceId: string,
@@ -34,47 +34,122 @@ export async function getThemeTrends(
   const currentPeriodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
   const previousPeriodStart = new Date(now.getTime() - periodDays * 2 * 24 * 60 * 60 * 1000);
 
+  // Fetch only theme metadata (no nested feedback)
   const themes = await db.theme.findMany({
     where: { workspaceId },
-    include: {
-      feedback: {
-        include: {
-          feedback: true,
-        },
-      },
-    },
+    select: { id: true, name: true, color: true },
   });
 
-  // Build the date labels for the daily volume chart (current period)
+  if (themes.length === 0) return [];
+
+  const themeIds = themes.map((t) => t.id);
+
+  // Batch all count queries in parallel instead of loading all feedback rows
+  const [totalCounts, currentCounts, previousCounts, sentimentCounts, dailyData] =
+    await Promise.all([
+      // Total feedback count per theme
+      db.feedbackTheme.groupBy({
+        by: ['themeId'],
+        where: { themeId: { in: themeIds } },
+        _count: { feedbackId: true },
+      }),
+
+      // Current period count per theme
+      db.feedbackTheme.groupBy({
+        by: ['themeId'],
+        where: {
+          themeId: { in: themeIds },
+          feedback: { createdAt: { gte: currentPeriodStart } },
+        },
+        _count: { feedbackId: true },
+      }),
+
+      // Previous period count per theme
+      db.feedbackTheme.groupBy({
+        by: ['themeId'],
+        where: {
+          themeId: { in: themeIds },
+          feedback: {
+            createdAt: { gte: previousPeriodStart, lt: currentPeriodStart },
+          },
+        },
+        _count: { feedbackId: true },
+      }),
+
+      // Sentiment breakdown per theme (current period only for relevance)
+      db.feedbackTheme.findMany({
+        where: {
+          themeId: { in: themeIds },
+        },
+        select: {
+          themeId: true,
+          feedback: {
+            select: { sentiment: true },
+          },
+        },
+      }),
+
+      // Daily volume for current period - lightweight
+      db.feedbackTheme.findMany({
+        where: {
+          themeId: { in: themeIds },
+          feedback: { createdAt: { gte: currentPeriodStart } },
+        },
+        select: {
+          themeId: true,
+          feedback: {
+            select: { createdAt: true },
+          },
+        },
+      }),
+    ]);
+
+  // Build lookup maps
+  const totalMap = Object.fromEntries(
+    totalCounts.map((g) => [g.themeId, g._count.feedbackId])
+  );
+  const currentMap = Object.fromEntries(
+    currentCounts.map((g) => [g.themeId, g._count.feedbackId])
+  );
+  const previousMap = Object.fromEntries(
+    previousCounts.map((g) => [g.themeId, g._count.feedbackId])
+  );
+
+  // Build sentiment breakdown map
+  const sentimentMap: Record<string, { POS: number; NEU: number; NEG: number }> = {};
+  sentimentCounts.forEach((ft) => {
+    if (!sentimentMap[ft.themeId]) {
+      sentimentMap[ft.themeId] = { POS: 0, NEU: 0, NEG: 0 };
+    }
+    const s = ft.feedback.sentiment;
+    if (s === 'POS' || s === 'NEU' || s === 'NEG') {
+      sentimentMap[ft.themeId][s]++;
+    }
+  });
+
+  // Build daily volume map
   const dateLabels: string[] = [];
   for (let d = 0; d < periodDays; d++) {
     const dt = new Date(currentPeriodStart.getTime() + d * 24 * 60 * 60 * 1000);
     dateLabels.push(dt.toISOString().split('T')[0]);
   }
 
+  const dailyVolumeMap: Record<string, Record<string, number>> = {};
+  dailyData.forEach((ft) => {
+    if (!dailyVolumeMap[ft.themeId]) {
+      dailyVolumeMap[ft.themeId] = {};
+      dateLabels.forEach((d) => (dailyVolumeMap[ft.themeId][d] = 0));
+    }
+    const dayKey = ft.feedback.createdAt.toISOString().split('T')[0];
+    if (dailyVolumeMap[ft.themeId][dayKey] !== undefined) {
+      dailyVolumeMap[ft.themeId][dayKey]++;
+    }
+  });
+
   const summaries: ThemeTrendSummary[] = themes.map((theme) => {
-    let currentCount = 0;
-    let previousCount = 0;
-    const sentimentBreakdown = { POS: 0, NEU: 0, NEG: 0 };
-    const dailyMap: Record<string, number> = {};
-    dateLabels.forEach((d) => (dailyMap[d] = 0));
-
-    theme.feedback.forEach((ft) => {
-      const fb = ft.feedback;
-      if (fb.createdAt >= currentPeriodStart) {
-        currentCount++;
-        const dayKey = fb.createdAt.toISOString().split('T')[0];
-        if (dailyMap[dayKey] !== undefined) {
-          dailyMap[dayKey]++;
-        }
-      } else if (fb.createdAt >= previousPeriodStart && fb.createdAt < currentPeriodStart) {
-        previousCount++;
-      }
-
-      if (fb.sentiment === 'POS') sentimentBreakdown.POS++;
-      else if (fb.sentiment === 'NEU') sentimentBreakdown.NEU++;
-      else if (fb.sentiment === 'NEG') sentimentBreakdown.NEG++;
-    });
+    const currentCount = currentMap[theme.id] || 0;
+    const previousCount = previousMap[theme.id] || 0;
+    const totalFeedbackCount = totalMap[theme.id] || 0;
 
     let changePercentage = 0;
     if (previousCount > 0) {
@@ -87,19 +162,19 @@ export async function getThemeTrends(
 
     const dailyVolume: DailyVolumeEntry[] = dateLabels.map((date) => ({
       date,
-      count: dailyMap[date] || 0,
+      count: dailyVolumeMap[theme.id]?.[date] || 0,
     }));
 
     return {
       themeId: theme.id,
       themeName: theme.name,
       color: theme.color,
-      totalFeedbackCount: theme.feedback.length,
+      totalFeedbackCount,
       currentPeriodCount: currentCount,
       previousPeriodCount: previousCount,
       changePercentage,
       isSpiking,
-      sentimentBreakdown,
+      sentimentBreakdown: sentimentMap[theme.id] || { POS: 0, NEU: 0, NEG: 0 },
       dailyVolume,
     };
   });

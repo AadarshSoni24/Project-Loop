@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
 
   // Return theme trends and spike detection
   const trends = await getThemeTrends(sessionUser.workspaceId, periodDays);
-  return NextResponse.json({ data: trends });
+  const response = NextResponse.json({ data: trends });
+  response.headers.set("Cache-Control", "private, max-age=30, stale-while-revalidate=60");
+  return response;
 }
 
 export async function POST(req: NextRequest) {
